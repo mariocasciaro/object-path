@@ -1,0 +1,27 @@
+{
+  "name": "object-path",
+  "description": "Access deep properties using a path",
+  "version": "0.0.1",
+  "author": {
+    "name": "Mario Casciaro"
+  },
+  "homepage": "https://github.com/mariocasciaro/object-path",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mariocasciaro/object-path.git"
+  },
+  "devDependencies": {
+    "mocha": "~1.13.0",
+    "chai": "~1.8.0"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha test.js --reporter spec"
+  },
+  "keywords": [
+    "deep",
+    "path",
+    "access",
+    "bean"
+  ],
+  "license": "MIT"
+}
