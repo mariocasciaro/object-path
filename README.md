@@ -1,10 +1,15 @@
+
+
+object-path
+===========
+
+Access deep properties using a path
+
 [![NPM](https://nodei.co/npm/object-path.png?downloads=true)](https://nodei.co/npm/object-path/)
 
 [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path)
 
-# object-path
-
-Access deep properties using a path
+# Usage
 
 ```javascript
 
