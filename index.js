@@ -7,7 +7,7 @@ function isEmpty(value) {
     return true;
   } else {
     for(var i in value) {
-      if(value.hasOwnProperty(i)) {
+      if(Object.prototype.hasOwnProperty.call(value, i)) {
         return false;
       }
     }

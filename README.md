@@ -9,7 +9,7 @@ Access deep properties using a path
 
 [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path)
 
-# Usage
+## Usage
 
 ```javascript
 
