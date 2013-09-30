@@ -31,7 +31,7 @@ function isArray(obj) {
 
 var objectPath = module.exports = {};
 objectPath.set = function(obj, path, value) {
-  if(!path) {
+  if(isEmpty(path)) {
     return;
   }
   if(isString(path)) {
