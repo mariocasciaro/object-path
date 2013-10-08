@@ -87,3 +87,14 @@ describe('push', function() {
     expect(obj).to.have.deep.property("b.h.0", "l");
   });
 });
+
+
+describe('ensureExists', function() {
+  it('should create the path if it does not exists', function() {
+    var obj = getTestObj();
+    objectPath.ensureExists(obj, "b.g.1.l", "test");
+    expect(obj).to.have.deep.property("b.g.1.l", "test");
+    objectPath.ensureExists(obj, "b.g.1.l", "test1");
+    expect(obj).to.have.deep.property("b.g.1.l", "test");
+  });
+});

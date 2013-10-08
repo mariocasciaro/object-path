@@ -29,18 +29,21 @@ function isArray(obj) {
 }
 
 
-var objectPath = module.exports = {};
-objectPath.set = function(obj, path, value) {
+
+function set(obj, path, value, doNotReplace) {
   if(isEmpty(path)) {
-    return;
+    return undefined;
   }
   if(isString(path)) {
-    objectPath.set(obj, path.split('.'), value);
-    return;
+    return set(obj, path.split('.'), value, doNotReplace);
   }
   var currentPath = isNaN(parseInt(path[0])) ? path[0] : parseInt(path[0]);
   if(path.length === 1) {
-    obj[currentPath] = value;
+    var oldVal = obj[currentPath];
+    if(oldVal === void 0 || !doNotReplace) {
+      obj[currentPath] = value;
+    }
+    return oldVal;
   } else if (path.length > 1) {
     if(obj[currentPath] === void 0) {
       if(isNumber(currentPath)) {
@@ -49,9 +52,24 @@ objectPath.set = function(obj, path, value) {
         obj[currentPath] = {};
       }
     }
-    objectPath.set(obj[currentPath], path.slice(1), value);
+    return set(obj[currentPath], path.slice(1), value, doNotReplace);
   }
+
+  return undefined;
+}
+
+
+var objectPath = module.exports = {};
+
+objectPath.ensureExists = function(obj, path, value) {
+  return set(obj, path, value, true);
 };
+
+
+objectPath.set = function(obj, path, value, doNotReplace) {
+  return set(obj, path, value, false);
+};
+
 
 objectPath.push = function(obj, path /*, values */) {
   var arr = objectPath.get(obj, path);
