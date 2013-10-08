@@ -32,7 +32,7 @@ function isArray(obj) {
 
 function set(obj, path, value, doNotReplace) {
   if(isEmpty(path)) {
-    return undefined;
+    return obj;
   }
   if(isString(path)) {
     return set(obj, path.split('.'), value, doNotReplace);
@@ -65,9 +65,8 @@ objectPath.ensureExists = function(obj, path, value) {
   return set(obj, path, value, true);
 };
 
-
 objectPath.set = function(obj, path, value, doNotReplace) {
-  return set(obj, path, value, false);
+  return set(obj, path, value, doNotReplace);
 };
 
 
