@@ -35,7 +35,14 @@ objectPath.get(obj, "a.h");  //returns "m"
 //set will create intermediate object/arrays
 objectPath.set(obj, "a.j.0.f", "m");
 
-//push into arrays
+//push into arrays (and create intermediate objects/arrays)
 objectPath.push(obj, "a.k", "o");
 
+//Ensure a path exists (if it doesn't, set the default value you provide)
+objectPath.ensureExists(obj, "a.k.1", "DEFAULT");
+
+
 ```
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/mariocasciaro/object-path/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

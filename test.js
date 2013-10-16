@@ -92,9 +92,17 @@ describe('push', function() {
 describe('ensureExists', function() {
   it('should create the path if it does not exists', function() {
     var obj = getTestObj();
-    objectPath.ensureExists(obj, "b.g.1.l", "test");
+    var oldVal = objectPath.ensureExists(obj, "b.g.1.l", "test");
+    expect(oldVal).to.not.exist;
     expect(obj).to.have.deep.property("b.g.1.l", "test");
-    objectPath.ensureExists(obj, "b.g.1.l", "test1");
+    oldVal = objectPath.ensureExists(obj, "b.g.1.l", "test1");
+    expect(oldVal).to.be.equal("test");
     expect(obj).to.have.deep.property("b.g.1.l", "test");
+  });
+
+
+  it('should return the object if path is empty', function() {
+    var obj = getTestObj();
+    expect(objectPath.ensureExists(obj, [], "test")).to.have.property('a', 'b');
   });
 });
