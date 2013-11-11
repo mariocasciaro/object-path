@@ -12,10 +12,44 @@
   },
   "devDependencies": {
     "mocha": "~1.13.0",
-    "chai": "~1.8.0"
+    "chai": "~1.8.0",
+    "mocha-lcov-reporter": "~0.0.1",
+    "coveralls": "~2.3.0",
+    "istanbul": "~0.1.44"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha test.js --reporter spec"
+    "test": "./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha test.js --report html -- -R spec"
+  },
+  "testling": {
+    "browsers": {
+      "ie": [
+        8,
+        9
+      ],
+      "firefox": [
+        10,
+        24
+      ],
+      "chrome": [
+        30,
+        22
+      ],
+      "safari": [
+        5,
+        6
+      ],
+      "opera": [
+        15
+      ],
+      "iphone": [
+        6
+      ],
+      "android-browser": [
+        4.2
+      ]
+    },
+    "harness": "mocha",
+    "files": "test.js"
   },
   "keywords": [
     "deep",

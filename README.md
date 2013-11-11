@@ -9,6 +9,8 @@ Access deep properties using a path
 
 [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path)
 
+[![browser support](https://ci.testling.com/mariocasciaro/object-path.png)](http://ci.testling.com/mariocasciaro/object-path)
+
 ## Usage
 
 ```javascript
