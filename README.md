@@ -8,6 +8,7 @@ Access deep properties using a path
 [![NPM](https://nodei.co/npm/object-path.png?downloads=true)](https://nodei.co/npm/object-path/)
 
 [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path)
+[![Coverage Status](https://coveralls.io/repos/mariocasciaro/object-path/badge.png)](https://coveralls.io/r/mariocasciaro/object-path)
 
 [![browser support](https://ci.testling.com/mariocasciaro/object-path.png)](http://ci.testling.com/mariocasciaro/object-path)
 
