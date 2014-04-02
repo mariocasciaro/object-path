@@ -38,6 +38,10 @@ describe('get', function() {
   it('should return undefined for missing values under array', function() {
     expect(objectPath.get(getTestObj(), "b.d.5")).to.not.exist;
   });
+
+  it('should return the value under integer-like key', function() {
+    expect(objectPath.get({ "1a": "foo" }, "1a")).to.be.equal("foo");
+  });
 });
 
 
@@ -69,7 +73,20 @@ describe('set', function() {
   it('should create intermediate arrays', function() {
     var obj = getTestObj();
     objectPath.set(obj, "c.0.1.m", "l");
+    expect(obj.c[0]).to.be.an("array");
     expect(obj).to.have.deep.property("c.0.1.m", "l");
+  });
+
+  it('should set value under integer-like key', function() {
+    var obj = getTestObj();
+    objectPath.set(obj, "1a", "foo");
+    expect(obj).to.have.deep.property("1a", "foo");
+  });
+
+  it('should set value under empty array', function() {
+    var obj = [];
+    objectPath.set(obj, [0], "foo");
+    expect(obj[0]).to.be.equal("foo");
   });
 });
 
