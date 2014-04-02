@@ -28,6 +28,14 @@ function isArray(obj) {
     Object.prototype.toString.call(obj) == '[object Array]';
 }
 
+function getKey(key) {
+  var intKey = parseInt(key);
+  if (intKey.toString() === key) {
+    return intKey;
+  }
+  return key;
+}
+
 
 
 function set(obj, path, value, doNotReplace) {
@@ -37,7 +45,7 @@ function set(obj, path, value, doNotReplace) {
   if(isString(path)) {
     return set(obj, path.split('.'), value, doNotReplace);
   }
-  var currentPath = isNaN(parseInt(path[0])) ? path[0] : parseInt(path[0]);
+  var currentPath = getKey(path[0]);
   if(path.length === 1) {
     var oldVal = obj[currentPath];
     if(oldVal === void 0 || !doNotReplace) {
@@ -91,7 +99,7 @@ objectPath.get = function(obj, path) {
   if(isString(path)) {
     return objectPath.get(obj, path.split('.'));
   }
-  var currentPath = isNaN(parseInt(path[0])) ? path[0] : parseInt(path[0]);
+  var currentPath = getKey(path[0]);
   if(path.length === 1) {
     return obj[currentPath];
   }
