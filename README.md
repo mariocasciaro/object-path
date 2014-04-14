@@ -9,6 +9,7 @@ Access deep properties using a path
 
 [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path)
 [![Coverage Status](https://coveralls.io/repos/mariocasciaro/object-path/badge.png)](https://coveralls.io/r/mariocasciaro/object-path)
+[![devDependency Status](https://david-dm.org/mariocasciaro/object-path/dev-status.svg)](https://david-dm.org/mariocasciaro/object-path#info=devDependencies)
 
 [![browser support](https://ci.testling.com/mariocasciaro/object-path.png)](https://ci.testling.com/mariocasciaro/object-path)
 
