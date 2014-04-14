@@ -123,3 +123,26 @@ describe('ensureExists', function() {
     expect(objectPath.ensureExists(obj, [], "test")).to.have.property('a', 'b');
   });
 });
+
+describe('del', function(){
+  it('should delete deep paths', function(){
+    var obj = getTestObj();
+
+
+    objectPath.set(obj, 'b.g.1.1', "test");
+    objectPath.set(obj, 'b.g.1.2', "test");
+    expect(obj).to.have.deep.property("b.g.1.1","test");
+    expect(obj).to.have.deep.property("b.g.1.2","test");
+
+    expect(objectPath.del(obj)).to.be.equal(obj);
+
+    objectPath.del(obj, 'b.g.1.1');
+    expect(obj).to.not.have.deep.property("b.g.1.1");
+    expect(obj).to.have.deep.property("b.g.1.2","test");
+    objectPath.del(obj, ['b','g','1','2']);
+    expect(obj).to.not.have.deep.property("b.g.1.2");
+    expect(obj).to.have.deep.property("b.g.1");
+    expect(objectPath.del(obj, ['b'])).to.not.have.deep.property("b.g");
+    expect(obj).to.be.deep.equal({'a':'b'});
+  });
+});

@@ -47,6 +47,3 @@ objectPath.ensureExists(obj, "a.k.1", "DEFAULT");
 
 
 ```
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/mariocasciaro/object-path/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

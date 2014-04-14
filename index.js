@@ -79,6 +79,36 @@
     return undefined;
   }
 
+  function del(obj, path) {
+    if (isEmpty(path)) {
+      return obj;
+    }
+    if (isEmpty(obj)) {
+      return undefined;
+    }
+    if(isString(path)) {
+      return del(obj, path.split('.'));
+    }
+    var currentPath = getKey(path[0]);
+    var oldVal = obj[currentPath];
+
+    if(path.length === 1) {
+      if (oldVal !== void 0) {
+        if (isArray(obj[currentPath])) {
+          obj.splice(currentPath, 1);
+        } else {
+          delete obj[currentPath];
+        }
+      }
+    } else if (path.length > 1) {
+      if (obj[currentPath] !== void 0) {
+        return del(obj[currentPath], path.slice(1));
+      }
+    }
+
+    return obj;
+  }
+  
   var objectPath = {};
 
   objectPath.ensureExists = function (obj, path, value){
@@ -114,6 +144,10 @@
       return obj[currentPath];
     }
     return objectPath.get(obj[currentPath], path.slice(1));
+  };
+
+  objectPath.del = function(obj, path) {
+    return del(obj, path);
   };
 
   return objectPath;
