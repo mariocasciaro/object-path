@@ -13,6 +13,20 @@ Access deep properties using a path
 
 [![browser support](https://ci.testling.com/mariocasciaro/object-path.png)](https://ci.testling.com/mariocasciaro/object-path)
 
+## Install
+
+### Node.js
+
+```
+npm install object-path
+```
+
+### Browser
+
+```
+bower install object-path
+```
+
 ## Usage
 
 ```javascript
