@@ -59,24 +59,24 @@
       return set(obj, path.split('.'), value, doNotReplace);
     }
     var currentPath = getKey(path[0]);
+
     if (path.length === 1) {
       var oldVal = obj[currentPath];
       if (oldVal === void 0 || !doNotReplace) {
         obj[currentPath] = value;
       }
       return oldVal;
-    } else if (path.length > 1) {
-      if (obj[currentPath] === void 0) {
-        if (isNumber(currentPath)) {
-          obj[currentPath] = [];
-        } else {
-          obj[currentPath] = {};
-        }
-      }
-      return set(obj[currentPath], path.slice(1), value, doNotReplace);
     }
 
-    return undefined;
+    if (obj[currentPath] === void 0) {
+      if (isNumber(currentPath)) {
+        obj[currentPath] = [];
+      } else {
+        obj[currentPath] = {};
+      }
+    }
+
+    return set(obj[currentPath], path.slice(1), value, doNotReplace);
   }
 
   function del(obj, path) {
@@ -89,18 +89,19 @@
     if(isString(path)) {
       return del(obj, path.split('.'));
     }
+
     var currentPath = getKey(path[0]);
     var oldVal = obj[currentPath];
 
     if(path.length === 1) {
       if (oldVal !== void 0) {
-        if (isArray(obj[currentPath])) {
+        if (isArray(obj)) {
           obj.splice(currentPath, 1);
         } else {
           delete obj[currentPath];
         }
       }
-    } else if (path.length > 1) {
+    } else {
       if (obj[currentPath] !== void 0) {
         return del(obj[currentPath], path.slice(1));
       }
@@ -108,7 +109,7 @@
 
     return obj;
   }
-  
+
   var objectPath = {};
 
   objectPath.ensureExists = function (obj, path, value){
@@ -129,21 +130,26 @@
     arr.push.apply(arr, args);
   };
 
-  objectPath.get = function (obj, path){
+  objectPath.get = function (obj, path, defaultValue){
     if (isEmpty(path)) {
       return obj;
     }
     if (isEmpty(obj)) {
-      return undefined;
+      return defaultValue;
     }
     if (isString(path)) {
-      return objectPath.get(obj, path.split('.'));
+      return objectPath.get(obj, path.split('.'), defaultValue);
     }
     var currentPath = getKey(path[0]);
+
     if (path.length === 1) {
+      if (obj[currentPath] === void 0) {
+        return defaultValue;
+      }
       return obj[currentPath];
     }
-    return objectPath.get(obj[currentPath], path.slice(1));
+
+    return objectPath.get(obj[currentPath], path.slice(1), defaultValue);
   };
 
   objectPath.del = function(obj, path) {

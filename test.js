@@ -16,31 +16,78 @@ function getTestObj() {
 
 describe('get', function() {
   it('should return the value under shallow object', function() {
-    expect(objectPath.get(getTestObj(), "a")).to.be.equal("b");
+    var obj = getTestObj();
+    expect(objectPath.get(obj, "a")).to.be.equal("b");
+    expect(objectPath.get(obj, ["a"])).to.be.equal("b");
   });
 
   it('should return the value under deep object', function() {
-    expect(objectPath.get(getTestObj(), "b.f")).to.be.equal("i");
+    var obj = getTestObj();
+    expect(objectPath.get(obj, "b.f")).to.be.equal("i");
+    expect(objectPath.get(obj, ["b","f"])).to.be.equal("i");
   });
 
   it('should return the value under array', function() {
-    expect(objectPath.get(getTestObj(), "b.d.0")).to.be.equal("a");
+    var obj = getTestObj();
+    expect(objectPath.get(obj, "b.d.0")).to.be.equal("a");
+    expect(objectPath.get(obj, ["b","d",0])).to.be.equal("a");
   });
 
   it('should return the value under array deep', function() {
-    expect(objectPath.get(getTestObj(), "b.e.1.f")).to.be.equal("g");
+    var obj = getTestObj();
+    expect(objectPath.get(obj, "b.e.1.f")).to.be.equal("g");
+    expect(objectPath.get(obj, ["b","e",1,"f"])).to.be.equal("g");
   });
 
   it('should return undefined for missing values under object', function() {
-    expect(objectPath.get(getTestObj(), "a.b")).to.not.exist;
+    var obj = getTestObj();
+    expect(objectPath.get(obj, "a.b")).to.not.exist;
+    expect(objectPath.get(obj, ["a","b"])).to.not.exist;
   });
 
   it('should return undefined for missing values under array', function() {
-    expect(objectPath.get(getTestObj(), "b.d.5")).to.not.exist;
+    var obj = getTestObj();
+    expect(objectPath.get(obj, "b.d.5")).to.not.exist;
+    expect(objectPath.get(obj, ["b","d","5"])).to.not.exist;
   });
 
   it('should return the value under integer-like key', function() {
-    expect(objectPath.get({ "1a": "foo" }, "1a")).to.be.equal("foo");
+    var obj = { "1a": "foo" };
+    expect(objectPath.get(obj, "1a")).to.be.equal("foo");
+    expect(objectPath.get(obj, ["1a"])).to.be.equal("foo");
+  });
+
+  it('should return the default value when the key doesnt exist', function() {
+    var obj = { "1a": "foo" };
+    expect(objectPath.get(obj, "1b", null)).to.be.equal(null);
+    expect(objectPath.get(obj, ["1b"], null)).to.be.equal(null);
+  });
+
+  it('should return the default value when path is empty', function() {
+    var obj = { "1a": "foo" };
+    expect(objectPath.get(obj, "", null)).to.be.deep.equal({ "1a": "foo" });
+    expect(objectPath.get(obj, [])).to.be.deep.equal({ "1a": "foo" });
+    expect(objectPath.get({  }, ["1"])).to.be.equal(undefined);
+  });
+
+  it('should skip non own properties with isEmpty', function(){
+    var Base = function(enabled){ };
+    Base.prototype = {
+      one: {
+        two: true
+      }
+    };
+    var Extended = function(){
+      Base.call(this,  true);
+    };
+    Extended.prototype = Object.create(Base.prototype);
+
+    var extended = new Extended();
+
+    expect(objectPath.get(extended, ['one','two'])).to.be.equal(undefined);
+    extended.enabled = true;
+
+    expect(objectPath.get(extended, 'enabled')).to.be.equal(true);
   });
 });
 
@@ -50,11 +97,17 @@ describe('set', function() {
     var obj = getTestObj();
     objectPath.set(obj, "c", {m: "o"});
     expect(obj).to.have.deep.property("c.m", "o");
+    obj = getTestObj();
+    objectPath.set(obj, ["c"], {m: "o"});
+    expect(obj).to.have.deep.property("c.m", "o");
   });
 
   it('should set value under deep object', function() {
     var obj = getTestObj();
     objectPath.set(obj, "b.c", "o");
+    expect(obj).to.have.deep.property("b.c", "o");
+    obj = getTestObj();
+    objectPath.set(obj, ["b","c"], "o");
     expect(obj).to.have.deep.property("b.c", "o");
   });
 
@@ -62,11 +115,17 @@ describe('set', function() {
     var obj = getTestObj();
     objectPath.set(obj, "b.e.1.g", "f");
     expect(obj).to.have.deep.property("b.e.1.g", "f");
+    obj = getTestObj();
+    objectPath.set(obj, ["b","e",1,"g"], "f");
+    expect(obj).to.have.deep.property("b.e.1.g", "f");
   });
 
   it('should create intermediate objects', function() {
     var obj = getTestObj();
     objectPath.set(obj, "c.d.e.f", "l");
+    expect(obj).to.have.deep.property("c.d.e.f", "l");
+    obj = getTestObj();
+    objectPath.set(obj, ["c","d","e","f"], "l");
     expect(obj).to.have.deep.property("c.d.e.f", "l");
   });
 
@@ -75,17 +134,27 @@ describe('set', function() {
     objectPath.set(obj, "c.0.1.m", "l");
     expect(obj.c[0]).to.be.an("array");
     expect(obj).to.have.deep.property("c.0.1.m", "l");
+    obj = getTestObj();
+    objectPath.set(obj, ["c","0",1,"m"], "l");
+    expect(obj.c[0]).to.be.an("array");
+    expect(obj).to.have.deep.property("c.0.1.m", "l");
   });
 
   it('should set value under integer-like key', function() {
     var obj = getTestObj();
     objectPath.set(obj, "1a", "foo");
     expect(obj).to.have.deep.property("1a", "foo");
+    obj = getTestObj();
+    objectPath.set(obj, ["1a"], "foo");
+    expect(obj).to.have.deep.property("1a", "foo");
   });
 
   it('should set value under empty array', function() {
     var obj = [];
     objectPath.set(obj, [0], "foo");
+    expect(obj[0]).to.be.equal("foo");
+    obj = [];
+    objectPath.set(obj, "0", "foo");
     expect(obj[0]).to.be.equal("foo");
   });
 });
@@ -96,11 +165,17 @@ describe('push', function() {
     var obj = getTestObj();
     objectPath.push(obj, "b.c", "l");
     expect(obj).to.have.deep.property("b.c.0", "l");
+    obj = getTestObj();
+    objectPath.push(obj, ["b","c"], "l");
+    expect(obj).to.have.deep.property("b.c.0", "l");
   });
 
   it('should push value to new array', function() {
     var obj = getTestObj();
     objectPath.push(obj, "b.h", "l");
+    expect(obj).to.have.deep.property("b.h.0", "l");
+    obj = getTestObj();
+    objectPath.push(obj, ["b","h"], "l");
     expect(obj).to.have.deep.property("b.h.0", "l");
   });
 });
@@ -125,24 +200,55 @@ describe('ensureExists', function() {
 });
 
 describe('del', function(){
+  it('should return undefined on empty object', function(){
+    expect(objectPath.del({}, 'a')).to.equal(undefined);
+  });
+
   it('should delete deep paths', function(){
     var obj = getTestObj();
 
-
-    objectPath.set(obj, 'b.g.1.1', "test");
-    objectPath.set(obj, 'b.g.1.2', "test");
-    expect(obj).to.have.deep.property("b.g.1.1","test");
-    expect(obj).to.have.deep.property("b.g.1.2","test");
-
     expect(objectPath.del(obj)).to.be.equal(obj);
+
+    objectPath.set(obj, 'b.g.1.0', "test");
+    objectPath.set(obj, 'b.g.1.1', "test");
+    objectPath.set(obj, 'b.h.az', "test");
+
+    expect(obj).to.have.deep.property("b.g.1.0","test");
+    expect(obj).to.have.deep.property("b.g.1.1","test");
+    expect(obj).to.have.deep.property("b.h.az","test");
+
+    objectPath.del(obj, 'b.h.az');
+    expect(obj).to.not.have.deep.property("b.h.az");
+    expect(obj).to.have.deep.property("b.h");
 
     objectPath.del(obj, 'b.g.1.1');
     expect(obj).to.not.have.deep.property("b.g.1.1");
-    expect(obj).to.have.deep.property("b.g.1.2","test");
-    objectPath.del(obj, ['b','g','1','2']);
-    expect(obj).to.not.have.deep.property("b.g.1.2");
+    expect(obj).to.have.deep.property("b.g.1.0","test");
+
+    objectPath.del(obj, ['b','g','1','0']);
+    expect(obj).to.not.have.deep.property("b.g.1.0");
     expect(obj).to.have.deep.property("b.g.1");
+
     expect(objectPath.del(obj, ['b'])).to.not.have.deep.property("b.g");
     expect(obj).to.be.deep.equal({'a':'b'});
+  });
+
+  it('should remove items from existing array', function(){
+    var obj = getTestObj();
+
+    objectPath.del(obj, 'b.d.0');
+    expect(obj.b.d).to.have.length(1);
+    expect(obj.b.d).to.be.deep.equal(['b']);
+
+    objectPath.del(obj, 'b.d.0');
+    expect(obj.b.d).to.have.length(0);
+    expect(obj.b.d).to.be.deep.equal([]);
+  });
+
+  it('should skip undefined paths', function(){
+    var obj = getTestObj();
+
+    expect(objectPath.del(obj, 'do.not.exist')).to.be.equal(obj);
+    expect(objectPath.del(obj, 'a.c')).to.be.equal('b');
   });
 });
