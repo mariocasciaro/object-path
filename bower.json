@@ -1,6 +1,6 @@
 {
   "name": "object-path",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "index.js",
   "keywords": [
     "deep",
@@ -10,8 +10,8 @@
     "object"
   ],
   "ignore" : [
-    "test.js", 
-    "coverage", 
+    "test.js",
+    "coverage",
     "*.yml"
   ]
 }
