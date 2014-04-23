@@ -45,9 +45,13 @@ objectPath.get(obj, "a.b");  //returns "d"
 
 //works also with arrays
 objectPath.get(obj, "a.c.1");  //returns "f"
+objectPath.get(obj, ["a","c","1"]);  //returns "f"
+
+//can return a default value with get
+objectPath.get(obj, ["a.c.b"], "DEFAULT");  //returns "DEFAULT", since a.c.b path doesn't exists, if omitted, returns undefined
 
 //set
-objectPath.set(obj, "a.h", "m");
+objectPath.set(obj, "a.h", "m"); // or objectPath.set(obj, ["a","h"], "m");
 objectPath.get(obj, "a.h");  //returns "m"
 
 //set will create intermediate object/arrays
@@ -56,8 +60,11 @@ objectPath.set(obj, "a.j.0.f", "m");
 //push into arrays (and create intermediate objects/arrays)
 objectPath.push(obj, "a.k", "o");
 
-//Ensure a path exists (if it doesn't, set the default value you provide)
+//ensure a path exists (if it doesn't, set the default value you provide)
 objectPath.ensureExists(obj, "a.k.1", "DEFAULT");
 
+//deletes a path
+objectPath.del(obj, "a.b"); // obj.a.b is now undefined
+objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 
 ```
