@@ -130,6 +130,18 @@
     arr.push.apply(arr, args);
   };
 
+  objectPath.coalesce = function (obj, paths, defaultValue) {
+    var value;
+
+    for (var i = 0, len = paths.length; i < len; i++) {
+      if ((value = objectPath.get(obj, paths[i])) !== void 0) {
+        return value;
+      }
+    }
+
+    return defaultValue;
+  };
+
   objectPath.get = function (obj, path, defaultValue){
     if (isEmpty(path)) {
       return obj;
