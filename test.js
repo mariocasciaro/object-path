@@ -199,6 +199,59 @@ describe('ensureExists', function() {
   });
 });
 
+describe('coalesce', function(){
+  it('should return the first non-undefined value', function(){
+    var obj = {
+      should: {have: 'prop'}
+    };
+
+    expect(objectPath.coalesce(obj, [
+      'doesnt.exist',
+      ['might','not','exist'],
+      'should.have'
+    ])).to.equal('prop');
+  });
+
+  it('should work with falsy values (null, 0, \'\', false)', function(){
+    var obj = {
+      is: {
+        false: false,
+        null: null,
+        empty: '',
+        zero: 0
+      }
+    };
+
+    expect(objectPath.coalesce(obj, [
+      'doesnt.exist',
+      'is.zero'
+    ])).to.equal(0);
+
+    expect(objectPath.coalesce(obj, [
+      'doesnt.exist',
+      'is.false'
+    ])).to.equal(false);
+
+    expect(objectPath.coalesce(obj, [
+      'doesnt.exist',
+      'is.null'
+    ])).to.equal(null);
+
+    expect(objectPath.coalesce(obj, [
+      'doesnt.exist',
+      'is.empty'
+    ])).to.equal('');
+  });
+
+  it('returns defaultValue if no paths found', function(){
+    var obj = {
+      doesnt: 'matter'
+    };
+
+    expect(objectPath.coalesce(obj, ['some.inexistant','path',['on','object']], 'false')).to.equal('false');
+  });
+});
+
 describe('del', function(){
   it('should return undefined on empty object', function(){
     expect(objectPath.del({}, 'a')).to.equal(undefined);

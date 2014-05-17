@@ -43,6 +43,9 @@ var objectPath = require("object-path");
 //get deep property
 objectPath.get(obj, "a.b");  //returns "d"
 
+//get the first non-undefined value
+objectPath.coalesce(obj, ['a.z', 'a.d', ['a','b']], 'default');
+
 //works also with arrays
 objectPath.get(obj, "a.c.1");  //returns "f"
 objectPath.get(obj, ["a","c","1"]);  //returns "f"
