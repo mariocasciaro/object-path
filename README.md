@@ -78,3 +78,12 @@ objectPath.del(obj, "a.b"); // obj.a.b is now undefined
 objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 
 ```
+
+### Credits
+
+[Mario Casciaro](https://github.com/mariocasciaro) - Author
+[Paulo Cesar](https://github.com/pocesar) - Major contributor
+
+
+
+
