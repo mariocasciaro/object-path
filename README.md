@@ -44,7 +44,14 @@ var objectPath = require("object-path");
 objectPath.get(obj, "a.b");  //returns "d"
 
 //get the first non-undefined value
-objectPath.coalesce(obj, ['a.z', 'a.d', ['a','b']], 'default');
+objectPath.coalesce(obj, ['a.z', 'a.d', ['a','b']], 'default'); 
+
+//empty a given path (but do not delete it) depending on their type,so it retains reference to objects and arrays. 
+//functions that are not inherited from prototype are set to null. 
+//object instances are considered objects and just own property names are deleted 
+objectPath.empty(obj, 'a.b'); // obj.a.b is now ''
+objectPath.empty(obj, 'a.c'); // obj.a.c is now []
+objectPath.empty(obj, 'a'); // obj.a is now {}
 
 //works also with arrays
 objectPath.get(obj, "a.c.1");  //returns "f"

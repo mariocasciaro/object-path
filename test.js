@@ -252,6 +252,75 @@ describe('coalesce', function(){
   });
 });
 
+describe('empty', function(){
+  it('should ignore invalid arguments safely', function(){
+    var obj = {};
+    expect(objectPath.empty()).to.equal(undefined);
+    expect(objectPath.empty(obj, 'path')).to.equal(undefined);
+    expect(objectPath.empty(obj, '')).to.equal(obj);
+
+    obj.path = true;
+
+    expect(objectPath.empty(obj, 'inexistant')).to.equal(obj);
+  });
+
+  it('should empty each path according to their types', function(){
+    function Instance(){
+      this.notOwn = true;
+    }
+
+    /*istanbul ignore next: not part of code */
+    Instance.prototype.test = function(){};
+    /*istanbul ignore next: not part of code */
+    Instance.prototype.arr = [];
+
+    var
+      obj = {
+        string: 'some string',
+        array: ['some','array',[1,2,3]],
+        number: 21,
+        boolean: true,
+        object: {
+          some:'property',
+          sub: {
+            'property': true
+          }
+        },
+        instance: new Instance()
+      };
+
+    /*istanbul ignore next: not part of code */
+    obj['function'] = function(){};
+
+    objectPath.empty(obj, ['array','2']);
+    expect(obj.array[2]).to.deep.equal([]);
+
+    objectPath.empty(obj, 'object.sub');
+    expect(obj.object.sub).to.deep.equal({});
+
+    objectPath.empty(obj, 'instance.test');
+    expect(obj.instance.test).to.equal(null);
+    expect(Instance.prototype.test).to.be.a('function');
+
+    objectPath.empty(obj, 'string');
+    objectPath.empty(obj, 'number');
+    objectPath.empty(obj, 'boolean');
+    objectPath.empty(obj, 'function');
+    objectPath.empty(obj, 'array');
+    objectPath.empty(obj, 'object');
+    objectPath.empty(obj, 'instance');
+
+    expect(obj.string).to.equal('');
+    expect(obj.array).to.deep.equal([]);
+    expect(obj.number).to.equal(0);
+    expect(obj.boolean).to.equal(false);
+    expect(obj.object).to.deep.equal({});
+    expect(obj.instance.notOwn).to.be.an('undefined');
+    expect(obj.instance.arr).to.be.an('array');
+    expect(obj['function']).to.equal(null);
+  });
+});
+
 describe('del', function(){
   it('should return undefined on empty object', function(){
     expect(objectPath.del({}, 'a')).to.equal(undefined);
