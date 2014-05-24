@@ -81,8 +81,8 @@ objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 
 ### Credits
 
-[Mario Casciaro](https://github.com/mariocasciaro) - Author
-[Paulo Cesar](https://github.com/pocesar) - Major contributor
+* [Mario Casciaro](https://github.com/mariocasciaro) - Author
+* [Paulo Cesar](https://github.com/pocesar) - Major contributor
 
 
 
