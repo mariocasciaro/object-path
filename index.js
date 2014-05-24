@@ -14,6 +14,10 @@
 })(this, function(){
   'use strict';
 
+  var
+    toStr = Object.prototype.toString,
+    _hasOwnProperty = Object.prototype.hasOwnProperty;
+
   function isEmpty(value){
     if (!value) {
       return true;
@@ -22,7 +26,7 @@
       return true;
     } else {
       for (var i in value) {
-        if (Object.prototype.hasOwnProperty.call(value, i)) {
+        if (_hasOwnProperty.call(value, i)) {
           return false;
         }
       }
@@ -30,17 +34,28 @@
     }
   }
 
+  function toString(type){
+    return toStr.call(type);
+  }
+
   function isNumber(value){
-    return typeof value == 'number' || Object.prototype.toString.call(value) == "[object Number]";
+    return typeof value === 'number' || toString(value) === "[object Number]";
   }
 
   function isString(obj){
-    return typeof obj == 'string' || Object.prototype.toString.call(obj) == "[object String]";
+    return typeof obj === 'string' || toString(obj) === "[object String]";
+  }
+
+  function isObject(obj){
+    return typeof obj === 'object' && toString(obj) === "[object Object]";
   }
 
   function isArray(obj){
-    return typeof obj == 'object' && typeof obj.length == 'number' &&
-    Object.prototype.toString.call(obj) == '[object Array]';
+    return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
+  }
+
+  function isBoolean(obj){
+    return typeof obj === 'boolean' || toString(obj) === '[object Boolean]';
   }
 
   function getKey(key){
@@ -118,6 +133,38 @@
 
   objectPath.set = function (obj, path, value, doNotReplace){
     return set(obj, path, value, doNotReplace);
+  };
+
+  objectPath.empty = function(obj, path) {
+    if (isEmpty(path)) {
+      return obj;
+    }
+    if (isEmpty(obj)) {
+      return void 0;
+    }
+
+    var value, i;
+    if (!(value = objectPath.get(obj, path))) {
+      return obj;
+    }
+
+    if (isString(value)) {
+      return objectPath.set(obj, path, '');
+    } else if (isBoolean(value)) {
+      return objectPath.set(obj, path, false);
+    } else if (isNumber(value)) {
+      return objectPath.set(obj, path, 0);
+    } else if (isArray(value)) {
+      value.length = 0;
+    } else if (isObject(value)) {
+      for (i in value) {
+        if (_hasOwnProperty.call(value, i)) {
+          delete value[i];
+        }
+      }
+    } else {
+      return objectPath.set(obj, path, null);
+    }
   };
 
   objectPath.push = function (obj, path /*, values */){
