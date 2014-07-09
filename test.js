@@ -21,6 +21,12 @@ describe('get', function() {
     expect(objectPath.get(obj, ["a"])).to.be.equal("b");
   });
 
+  it('should work with number path', function() {
+    var obj = getTestObj();
+    expect(objectPath.get(obj.b.d, 0)).to.be.equal("a");
+    expect(objectPath.get(obj.b, 0)).to.be.equal(void 0);
+  });
+
   it('should return the value under deep object', function() {
     var obj = getTestObj();
     expect(objectPath.get(obj, "b.f")).to.be.equal("i");
@@ -102,6 +108,12 @@ describe('set', function() {
     expect(obj).to.have.deep.property("c.m", "o");
   });
 
+  it('should set value using number path', function() {
+    var obj = getTestObj();
+    objectPath.set(obj.b.d, 0, "o");
+    expect(obj).to.have.deep.property("b.d.0", "o");
+  });
+
   it('should set value under deep object', function() {
     var obj = getTestObj();
     objectPath.set(obj, "b.c", "o");
@@ -178,6 +190,13 @@ describe('push', function() {
     objectPath.push(obj, ["b","h"], "l");
     expect(obj).to.have.deep.property("b.h.0", "l");
   });
+
+  it('should push value to existing array using number path', function() {
+    var obj = getTestObj();
+    objectPath.push(obj.b.e, 0, "l");
+    expect(obj).to.have.deep.property("b.e.0.0", "l");
+  });
+
 });
 
 
@@ -255,8 +274,8 @@ describe('coalesce', function(){
 describe('empty', function(){
   it('should ignore invalid arguments safely', function(){
     var obj = {};
-    expect(objectPath.empty()).to.equal(undefined);
-    expect(objectPath.empty(obj, 'path')).to.equal(undefined);
+    expect(objectPath.empty()).to.equal(void 0);
+    expect(objectPath.empty(obj, 'path')).to.equal(void 0);
     expect(objectPath.empty(obj, '')).to.equal(obj);
 
     obj.path = true;
@@ -323,7 +342,13 @@ describe('empty', function(){
 
 describe('del', function(){
   it('should return undefined on empty object', function(){
-    expect(objectPath.del({}, 'a')).to.equal(undefined);
+    expect(objectPath.del({}, 'a')).to.equal(void 0);
+  });
+
+  it('should work with number path', function(){
+    var obj = getTestObj();
+    objectPath.del(obj.b.d, 1);
+    expect(obj.b.d).to.deep.equal(['a']);
   });
 
   it('should delete deep paths', function(){

@@ -67,6 +67,9 @@
   }
 
   function set(obj, path, value, doNotReplace){
+    if (isNumber(path)) {
+      path = [path];
+    }
     if (isEmpty(path)) {
       return obj;
     }
@@ -95,11 +98,16 @@
   }
 
   function del(obj, path) {
+    if (isNumber(path)) {
+      path = [path];
+    }
+
+    if (isEmpty(obj)) {
+      return void 0;
+    }
+
     if (isEmpty(path)) {
       return obj;
-    }
-    if (isEmpty(obj)) {
-      return undefined;
     }
     if(isString(path)) {
       return del(obj, path.split('.'));
@@ -190,6 +198,9 @@
   };
 
   objectPath.get = function (obj, path, defaultValue){
+    if (isNumber(path)) {
+      path = [path];
+    }
     if (isEmpty(path)) {
       return obj;
     }
@@ -199,6 +210,7 @@
     if (isString(path)) {
       return objectPath.get(obj, path.split('.'), defaultValue);
     }
+
     var currentPath = getKey(path[0]);
 
     if (path.length === 1) {
