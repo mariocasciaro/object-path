@@ -143,6 +143,16 @@
     return set(obj, path, value, doNotReplace);
   };
 
+  objectPath.insert = function (obj, path, value, at){
+    var arr = objectPath.get(obj, path);
+    at = ~~at;
+    if (!isArray(arr)) {
+      arr = [];
+      objectPath.set(obj, path, arr);
+    }
+    arr.splice(at, 0, value);
+  };
+
   objectPath.empty = function(obj, path) {
     if (isEmpty(path)) {
       return obj;
@@ -181,8 +191,8 @@
       arr = [];
       objectPath.set(obj, path, arr);
     }
-    var args = Array.prototype.slice.call(arguments, 2);
-    arr.push.apply(arr, args);
+
+    arr.push.apply(arr, Array.prototype.slice.call(arguments, 2));
   };
 
   objectPath.coalesce = function (obj, paths, defaultValue) {
