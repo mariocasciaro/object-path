@@ -11,7 +11,7 @@
     "url": "git://github.com/mariocasciaro/object-path.git"
   },
   "main": "index.js",
-  "scripts": ['index.js'],
+  "scripts": ["index.js"],
   "keywords": [
     "deep",
     "path",
