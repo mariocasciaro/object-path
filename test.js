@@ -458,18 +458,24 @@ describe('has', function () {
     var obj = getTestObj();
     expect(objectPath.has(obj, 'a')).to.be.true;
     expect(objectPath.has(obj, ['a'])).to.be.true;
+    expect(objectPath.has(obj, 'z')).to.be.false;
+    expect(objectPath.has(obj, ['z'])).to.be.false;
   });
 
   it('should work with number path', function() {
     var obj = getTestObj();
     expect(objectPath.has(obj.b.d, 0)).to.be.true;
     expect(objectPath.has(obj.b, 0)).to.be.false;
+    expect(objectPath.has(obj.b.d, 10)).to.be.false;
+    expect(objectPath.has(obj.b, 10)).to.be.false;
   });
 
   it('should test under deep object', function() {
     var obj = getTestObj();
     expect(objectPath.has(obj, 'b.f')).to.be.true;
     expect(objectPath.has(obj, ['b','f'])).to.be.true;
+    expect(objectPath.has(obj, 'b.g')).to.be.false;
+    expect(objectPath.has(obj, ['b','g'])).to.be.false;
   });
 
   it('should test value under array', function() {
