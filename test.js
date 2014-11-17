@@ -440,5 +440,61 @@ describe('insert', function(){
       'asdf'
     ]);
   });
+});
 
+describe('has', function () {
+  it('should return false for empty object', function () {
+    expect(objectPath.has({}, 'a')).to.be.false;
+  });
+
+  it('should return false for empty path', function () {
+    var obj = getTestObj();
+    expect(objectPath.has(obj, '')).to.be.false;
+    expect(objectPath.has(obj, [])).to.be.false;
+    expect(objectPath.has(obj, [''])).to.be.false;
+  });
+
+  it('should test under shallow object', function() {
+    var obj = getTestObj();
+    expect(objectPath.has(obj, 'a')).to.be.true;
+    expect(objectPath.has(obj, ['a'])).to.be.true;
+    expect(objectPath.has(obj, 'z')).to.be.false;
+    expect(objectPath.has(obj, ['z'])).to.be.false;
+  });
+
+  it('should work with number path', function() {
+    var obj = getTestObj();
+    expect(objectPath.has(obj.b.d, 0)).to.be.true;
+    expect(objectPath.has(obj.b, 0)).to.be.false;
+    expect(objectPath.has(obj.b.d, 10)).to.be.false;
+    expect(objectPath.has(obj.b, 10)).to.be.false;
+  });
+
+  it('should test under deep object', function() {
+    var obj = getTestObj();
+    expect(objectPath.has(obj, 'b.f')).to.be.true;
+    expect(objectPath.has(obj, ['b','f'])).to.be.true;
+    expect(objectPath.has(obj, 'b.g')).to.be.false;
+    expect(objectPath.has(obj, ['b','g'])).to.be.false;
+  });
+
+  it('should test value under array', function() {
+    var obj = getTestObj();
+    expect(objectPath.has(obj, 'b.d.0')).to.be.true;
+    expect(objectPath.has(obj, ['b','d',0])).to.be.true;
+  });
+
+  it('should test the value under array deep', function() {
+    var obj = getTestObj();
+    expect(objectPath.has(obj, 'b.e.1.f')).to.be.true;
+    expect(objectPath.has(obj, ['b','e',1,'f'])).to.be.true;
+    expect(objectPath.has(obj, 'b.e.1.f.g.h.i')).to.be.false;
+    expect(objectPath.has(obj, ['b','e',1,'f','g','h','i'])).to.be.false;
+  });
+
+  it('should test the value under integer-like key', function() {
+    var obj = { '1a': 'foo' };
+    expect(objectPath.has(obj, '1a')).to.be.true;
+    expect(objectPath.has(obj, ['1a'])).to.be.true;
+  });
 });
