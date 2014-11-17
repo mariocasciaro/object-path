@@ -80,6 +80,10 @@ objectPath.ensureExists(obj, "a.k.1", "DEFAULT");
 objectPath.del(obj, "a.b"); // obj.a.b is now undefined
 objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 
+//tests path existence
+objectPath.has(obj, "a.b"); // true
+objectPath.has(obj, ["a","d"]); // false
+
 ```
 
 ### Credits
