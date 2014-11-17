@@ -152,7 +152,7 @@
 
     for (var i = 0; i < path.length; i++) {
       var j = path[i];
-      if ((isObject(obj) || isArray(obj)) && (j in obj) && _hasOwnProperty.call(obj, j)) {
+      if ((isObject(obj) || isArray(obj)) && _hasOwnProperty.call(obj, j)) {
         obj = obj[j];
       } else {
         return false;
