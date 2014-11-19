@@ -144,10 +144,12 @@ describe('set', function() {
   it('should create intermediate arrays', function() {
     var obj = getTestObj();
     objectPath.set(obj, 'c.0.1.m', 'l');
+    expect(obj.c).to.be.an('array');
     expect(obj.c[0]).to.be.an('array');
     expect(obj).to.have.deep.property('c.0.1.m', 'l');
     obj = getTestObj();
     objectPath.set(obj, ['c','0',1,'m'], 'l');
+    expect(obj.c).to.be.an('array');
     expect(obj.c[0]).to.be.an('array');
     expect(obj).to.have.deep.property('c.0.1.m', 'l');
   });

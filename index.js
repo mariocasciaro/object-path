@@ -87,7 +87,9 @@
     }
 
     if (obj[currentPath] === void 0) {
-      if (isNumber(currentPath)) {
+      //check if we assume an array
+      var nextPath = getKey(path[1]);
+      if(isNumber(nextPath)) {
         obj[currentPath] = [];
       } else {
         obj[currentPath] = {};
