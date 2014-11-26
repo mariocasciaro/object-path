@@ -148,8 +148,8 @@ describe('set', function() {
     expect(obj.c[0]).to.be.an('array');
     expect(obj).to.have.deep.property('c.0.1.m', 'l');
     obj = getTestObj();
-    objectPath.set(obj, ['c','0',1,'m'], 'l');
-    expect(obj.c).to.be.an('array');
+    objectPath.set(obj, ['c','0', 1,'m'], 'l');
+    expect(obj.c).to.be.an('object');
     expect(obj.c[0]).to.be.an('array');
     expect(obj).to.have.deep.property('c.0.1.m', 'l');
   });
@@ -217,6 +217,14 @@ describe('ensureExists', function() {
   it('should return the object if path is empty', function() {
     var obj = getTestObj();
     expect(objectPath.ensureExists(obj, [], 'test')).to.have.property('a', 'b');
+  });
+
+  it('Issue #26', function() {
+    var any = {};
+    objectPath.ensureExists(any, ['1','1'], {});
+    expect(any).to.be.an('object');
+    expect(any[1]).to.be.an('object');
+    expect(any[1][1]).to.be.an('object');
   });
 });
 

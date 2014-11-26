@@ -74,9 +74,9 @@
       return obj;
     }
     if (isString(path)) {
-      return set(obj, path.split('.'), value, doNotReplace);
+      return set(obj, path.split('.').map(getKey), value, doNotReplace);
     }
-    var currentPath = getKey(path[0]);
+    var currentPath = path[0];
 
     if (path.length === 1) {
       var oldVal = obj[currentPath];
@@ -88,8 +88,7 @@
 
     if (obj[currentPath] === void 0) {
       //check if we assume an array
-      var nextPath = getKey(path[1]);
-      if(isNumber(nextPath)) {
+      if(isNumber(path[1])) {
         obj[currentPath] = [];
       } else {
         obj[currentPath] = {};
