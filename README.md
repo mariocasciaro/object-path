@@ -84,6 +84,20 @@ objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 objectPath.has(obj, "a.b"); // true
 objectPath.has(obj, ["a","d"]); // false
 
+//bind object
+var model = objectPath({
+  a: {
+    b: "d",
+    c: ["e", "f"]
+  }
+});
+
+//now any method from above is supported directly w/o passing an object
+model.get("a.b");  //returns "d"
+model.get(["a.c.b"], "DEFAULT");  //returns "DEFAULT"
+model.del("a.b"); // obj.a.b is now undefined
+model.has("a.b"); // false
+
 ```
 
 ### Credits
