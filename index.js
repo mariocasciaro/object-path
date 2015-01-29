@@ -134,7 +134,15 @@
     return obj;
   }
 
-  var objectPath = {};
+  var objectPath = function(obj) {
+    return Object.keys(objectPath).reduce(function(proxy, prop) {
+      if (typeof objectPath[prop] === 'function') {
+        proxy[prop] = objectPath[prop].bind(objectPath, obj);
+      }
+
+      return proxy;
+    }, {});
+  };
 
   objectPath.has = function (obj, path) {
     if (isEmpty(obj)) {

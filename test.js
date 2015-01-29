@@ -508,3 +508,169 @@ describe('has', function () {
     expect(objectPath.has(obj, ['1a'])).to.be.true;
   });
 });
+
+
+
+describe('bind object', function () {
+  // just get one scenario from each feature, so whole functionality is proxied well
+  it('should return the value under shallow object', function() {
+    var obj = getTestObj();
+    var model = objectPath(obj);
+    expect(model.get('a')).to.be.equal('b');
+    expect(model.get(['a'])).to.be.equal('b');
+  });
+
+  it('should set value under shallow object', function() {
+    var obj = getTestObj();
+    var model = objectPath(obj);
+    model.set('c', {m: 'o'});
+    expect(obj).to.have.deep.property('c.m', 'o');
+    obj = getTestObj();
+    model = objectPath(obj);
+    model.set(['c'], {m: 'o'});
+    expect(obj).to.have.deep.property('c.m', 'o');
+  });
+
+  it('should push value to existing array', function() {
+    var obj = getTestObj();
+    var model = objectPath(obj);
+    model.push('b.c', 'l');
+    expect(obj).to.have.deep.property('b.c.0', 'l');
+    obj = getTestObj();
+    model = objectPath(obj);
+    model.push(['b','c'], 'l');
+    expect(obj).to.have.deep.property('b.c.0', 'l');
+  });
+
+  it('should create the path if it does not exists', function() {
+    var obj = getTestObj();
+    var model = objectPath(obj);
+    var oldVal = model.ensureExists('b.g.1.l', 'test');
+    expect(oldVal).to.not.exist;
+    expect(obj).to.have.deep.property('b.g.1.l', 'test');
+    oldVal = model.ensureExists('b.g.1.l', 'test1');
+    expect(oldVal).to.be.equal('test');
+    expect(obj).to.have.deep.property('b.g.1.l', 'test');
+  });
+
+  it('should return the first non-undefined value', function(){
+    var obj = {
+      should: {have: 'prop'}
+    };
+    var model = objectPath(obj);
+
+    expect(model.coalesce([
+      'doesnt.exist',
+      ['might','not','exist'],
+      'should.have'
+    ])).to.equal('prop');
+  });
+
+  it('should empty each path according to their types', function(){
+    function Instance(){
+      this.notOwn = true;
+    }
+
+    /*istanbul ignore next: not part of code */
+    Instance.prototype.test = function(){};
+    /*istanbul ignore next: not part of code */
+    Instance.prototype.arr = [];
+
+    var
+      obj = {
+        string: 'some string',
+        array: ['some','array',[1,2,3]],
+        number: 21,
+        boolean: true,
+        object: {
+          some:'property',
+          sub: {
+            'property': true
+          }
+        },
+        instance: new Instance()
+      };
+
+    /*istanbul ignore next: not part of code */
+    obj['function'] = function(){};
+
+    var model = objectPath(obj);
+
+    model.empty(['array','2']);
+    expect(obj.array[2]).to.deep.equal([]);
+
+    model.empty('object.sub');
+    expect(obj.object.sub).to.deep.equal({});
+
+    model.empty('instance.test');
+    expect(obj.instance.test).to.equal(null);
+    expect(Instance.prototype.test).to.be.a('function');
+
+    model.empty('string');
+    model.empty('number');
+    model.empty('boolean');
+    model.empty('function');
+    model.empty('array');
+    model.empty('object');
+    model.empty('instance');
+
+    expect(obj.string).to.equal('');
+    expect(obj.array).to.deep.equal([]);
+    expect(obj.number).to.equal(0);
+    expect(obj.boolean).to.equal(false);
+    expect(obj.object).to.deep.equal({});
+    expect(obj.instance.notOwn).to.be.an('undefined');
+    expect(obj.instance.arr).to.be.an('array');
+    expect(obj['function']).to.equal(null);
+  });
+
+  it('should delete deep paths', function(){
+    var obj = getTestObj();
+    var model = objectPath(obj);
+
+    expect(model.del()).to.be.equal(obj);
+
+    model.set('b.g.1.0', 'test');
+    model.set('b.g.1.1', 'test');
+    model.set('b.h.az', 'test');
+
+    expect(obj).to.have.deep.property('b.g.1.0','test');
+    expect(obj).to.have.deep.property('b.g.1.1','test');
+    expect(obj).to.have.deep.property('b.h.az','test');
+
+    model.del('b.h.az');
+    expect(obj).to.not.have.deep.property('b.h.az');
+    expect(obj).to.have.deep.property('b.h');
+
+    model.del('b.g.1.1');
+    expect(obj).to.not.have.deep.property('b.g.1.1');
+    expect(obj).to.have.deep.property('b.g.1.0','test');
+
+    model.del(['b','g','1','0']);
+    expect(obj).to.not.have.deep.property('b.g.1.0');
+    expect(obj).to.have.deep.property('b.g.1');
+
+    expect(model.del(['b'])).to.not.have.deep.property('b.g');
+    expect(obj).to.be.deep.equal({'a':'b'});
+  });
+
+  it('should insert value into existing array', function(){
+    var obj = getTestObj();
+    var model = objectPath(obj);
+
+    model.insert('b.c', 'asdf');
+    expect(obj).to.have.deep.property('b.c.0', 'asdf');
+    expect(obj).to.not.have.deep.property('b.c.1');
+  });
+
+  it('should test under shallow object', function() {
+    var obj = getTestObj();
+    var model = objectPath(obj);
+
+    expect(model.has('a')).to.be.true;
+    expect(model.has(['a'])).to.be.true;
+    expect(model.has('z')).to.be.false;
+    expect(model.has(['z'])).to.be.false;
+  });
+
+});
