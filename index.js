@@ -7,6 +7,9 @@
   } else if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
     define([], factory);
+  } else if (angular) {
+    //Register with angular, if available
+    angular.module('objectPath', []).factory('objectPath', factory);
   } else {
     // Browser globals
     root.objectPath = factory();
