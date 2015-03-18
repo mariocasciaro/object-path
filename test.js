@@ -507,6 +507,14 @@ describe('has', function () {
     expect(objectPath.has(obj, '1a')).to.be.true;
     expect(objectPath.has(obj, ['1a'])).to.be.true;
   });
+
+  it('should distinct nonexistent key and key = undefined', function() {
+    var obj = {};
+    expect(objectPath.has(obj, 'key')).to.be.false;
+
+    obj.key = undefined;
+    expect(objectPath.has(obj, 'key')).to.be.true;
+  });
 });
 
 
