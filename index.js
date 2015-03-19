@@ -23,15 +23,16 @@
       return true;
     }
     if (isArray(value) && value.length === 0) {
-      return true;
-    } else {
-      for (var i in value) {
-        if (_hasOwnProperty.call(value, i)) {
-          return false;
+        return true;
+    } else if (!isString(value)) {
+        for (var i in value) {
+            if (_hasOwnProperty.call(value, i)) {
+                return false;
+            }
         }
-      }
-      return true;
+        return true;
     }
+    return false;
   }
 
   function toString(type){
