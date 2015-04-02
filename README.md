@@ -27,6 +27,12 @@ npm install object-path
 bower install object-path
 ```
 
+### Typescript typings
+
+```
+tsd query object-path --action install --save
+```
+
 ## Usage
 
 ```javascript
