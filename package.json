@@ -27,7 +27,18 @@
     "deep",
     "path",
     "access",
-    "bean"
+    "bean",
+    "get",
+    "property",
+    "dot",
+    "prop",
+    "object",
+    "obj",
+    "notation",
+    "segment",
+    "value",
+    "nested",
+    "key"
   ],
   "license": "MIT"
 }
