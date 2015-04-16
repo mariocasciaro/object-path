@@ -11,8 +11,6 @@ Access deep properties using a path
 [![devDependency Status](https://david-dm.org/mariocasciaro/object-path/dev-status.svg)](https://david-dm.org/mariocasciaro/object-path#info=devDependencies)
 ![Downloads](http://img.shields.io/npm/dm/object-path.svg)
 
-[![browser support](https://ci.testling.com/mariocasciaro/object-path.png)](https://ci.testling.com/mariocasciaro/object-path)
-
 ## Install
 
 ### Node.js
@@ -110,7 +108,3 @@ model.has("a.b"); // false
 
 * [Mario Casciaro](https://github.com/mariocasciaro) - Author
 * [Paulo Cesar](https://github.com/pocesar) - Major contributor
-
-
-
-
