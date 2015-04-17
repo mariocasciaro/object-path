@@ -38,7 +38,9 @@ tsd query object-path --action install --save
 var obj = {
   a: {
     b: "d",
-    c: ["e", "f"]
+    c: ["e", "f"],
+    '\u1200': 'unicode key',
+    'dot.dot': 'key'
   }
 };
 
@@ -46,6 +48,8 @@ var objectPath = require("object-path");
 
 //get deep property
 objectPath.get(obj, "a.b");  //returns "d"
+objectPath.get(obj, ["a", "dot.dot"]);  //returns "key"
+objectPath.get(obj, 'a.\u1200');  //returns "unicode key"
 
 //get the first non-undefined value
 objectPath.coalesce(obj, ['a.z', 'a.d', ['a','b']], 'default');
@@ -79,6 +83,7 @@ objectPath.push(obj, "a.k", "o");
 
 //ensure a path exists (if it doesn't, set the default value you provide)
 objectPath.ensureExists(obj, "a.k.1", "DEFAULT");
+var oldVal = objectPath.ensureExists(obj, "a.b", "DEFAULT"); // oldval === "d"
 
 //deletes a path
 objectPath.del(obj, "a.b"); // obj.a.b is now undefined
