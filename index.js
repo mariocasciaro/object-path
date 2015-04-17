@@ -137,6 +137,7 @@
 
   var objectPath = function(obj) {
     return Object.keys(objectPath).reduce(function(proxy, prop) {
+      /*istanbul ignore else*/
       if (typeof objectPath[prop] === 'function') {
         proxy[prop] = objectPath[prop].bind(objectPath, obj);
       }
