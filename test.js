@@ -15,6 +15,26 @@ function getTestObj() {
 }
 
 describe('get', function() {
+  it('should return the value using unicode key', function() {
+    var obj = {
+      '15\u00f8C': {
+        '3\u0111': 1
+      }
+    };
+    expect(objectPath.get(obj, '15\u00f8C.3\u0111')).to.be.equal(1);
+    expect(objectPath.get(obj, ['15\u00f8C','3\u0111'])).to.be.equal(1);
+  });
+
+  it('should return the value using dot in key', function() {
+    var obj = {
+      'a.b': {
+        'looks.like': 1
+      }
+    };
+    expect(objectPath.get(obj, 'a.b.looks.like')).to.be.equal(void 0);
+    expect(objectPath.get(obj, ['a.b','looks.like'])).to.be.equal(1);
+  });
+
   it('should return the value under shallow object', function() {
     var obj = getTestObj();
     expect(objectPath.get(obj, 'a')).to.be.equal('b');
@@ -99,6 +119,28 @@ describe('get', function() {
 
 
 describe('set', function() {
+  it('should set the value using unicode key', function() {
+    var obj = {
+      '15\u00f8C': {
+        '3\u0111': 1
+      }
+    };
+    objectPath.set(obj, '15\u00f8C.3\u0111', 2);
+    expect(objectPath.get(obj, '15\u00f8C.3\u0111')).to.be.equal(2);
+    objectPath.set(obj, '15\u00f8C.3\u0111', 3);
+    expect(objectPath.get(obj, ['15\u00f8C','3\u0111'])).to.be.equal(3);
+  });
+
+  it('should set the value using dot in key', function() {
+    var obj = {
+      'a.b': {
+        'looks.like': 1
+      }
+    };
+    objectPath.set(obj, ['a.b','looks.like'], 2);
+    expect(objectPath.get(obj, ['a.b','looks.like'])).to.be.equal(2);
+  });
+
   it('should set value under shallow object', function() {
     var obj = getTestObj();
     objectPath.set(obj, 'c', {m: 'o'});
@@ -175,6 +217,20 @@ describe('set', function() {
 
 
 describe('push', function() {
+  it('should push value to existing array using unicode key', function() {
+    var obj = getTestObj();
+    objectPath.push(obj, 'b.\u1290c', 'l');
+    expect(obj).to.have.deep.property('b.\u1290c.0', 'l');
+    objectPath.push(obj, ['b','\u1290c'], 'l');
+    expect(obj).to.have.deep.property('b.\u1290c.1', 'l');
+  });
+
+  it('should push value to existing array using dot key', function() {
+    var obj = getTestObj();
+    objectPath.push(obj, ['b','z.d'], 'l');
+    expect(objectPath.get(obj, ['b','z.d', 0])).to.be.equal('l');
+  });
+
   it('should push value to existing array', function() {
     var obj = getTestObj();
     objectPath.push(obj, 'b.c', 'l');
@@ -211,6 +267,12 @@ describe('ensureExists', function() {
     oldVal = objectPath.ensureExists(obj, 'b.g.1.l', 'test1');
     expect(oldVal).to.be.equal('test');
     expect(obj).to.have.deep.property('b.g.1.l', 'test');
+    oldVal = objectPath.ensureExists(obj, 'b.\u8210', 'ok');
+    expect(oldVal).to.not.exist;
+    expect(obj).to.have.deep.property('b.\u8210', 'ok');
+    oldVal = objectPath.ensureExists(obj, ['b','dot.dot'], 'ok');
+    expect(oldVal).to.not.exist;
+    expect(objectPath.get(obj, ['b','dot.dot'])).to.be.equal('ok');
   });
 
 
@@ -278,6 +340,16 @@ describe('coalesce', function(){
     };
 
     expect(objectPath.coalesce(obj, ['some.inexistant','path',['on','object']], 'false')).to.equal('false');
+  });
+
+  it('works with unicode and dot keys', function(){
+    var obj = {
+      '\u7591': true,
+      'dot.dot': false
+    };
+
+    expect(objectPath.coalesce(obj, ['1', '\u7591', 'a.b'])).to.equal(true);
+    expect(objectPath.coalesce(obj, ['1', ['dot.dot'], '\u7591'])).to.equal(false);
   });
 });
 
@@ -369,10 +441,13 @@ describe('del', function(){
     objectPath.set(obj, 'b.g.1.0', 'test');
     objectPath.set(obj, 'b.g.1.1', 'test');
     objectPath.set(obj, 'b.h.az', 'test');
+    objectPath.set(obj, 'b.\ubeef', 'test');
+    objectPath.set(obj, ['b','dot.dot'], 'test');
 
     expect(obj).to.have.deep.property('b.g.1.0','test');
     expect(obj).to.have.deep.property('b.g.1.1','test');
     expect(obj).to.have.deep.property('b.h.az','test');
+    expect(obj).to.have.deep.property('b.\ubeef','test');
 
     objectPath.del(obj, 'b.h.az');
     expect(obj).to.not.have.deep.property('b.h.az');
@@ -381,6 +456,12 @@ describe('del', function(){
     objectPath.del(obj, 'b.g.1.1');
     expect(obj).to.not.have.deep.property('b.g.1.1');
     expect(obj).to.have.deep.property('b.g.1.0','test');
+
+    objectPath.del(obj, 'b.\ubeef');
+    expect(obj).to.not.have.deep.property('b.\ubeef');
+
+    objectPath.del(obj, ['b','dot.dot']);
+    expect(objectPath.get(obj, ['b','dot.dot'])).to.be.equal(void 0);
 
     objectPath.del(obj, ['b','g','1','0']);
     expect(obj).to.not.have.deep.property('b.g.1.0');
@@ -454,66 +535,66 @@ describe('insert', function(){
 
 describe('has', function () {
   it('should return false for empty object', function () {
-    expect(objectPath.has({}, 'a')).to.be.false;
+    expect(objectPath.has({}, 'a')).to.be.equal(false);
   });
 
   it('should return false for empty path', function () {
     var obj = getTestObj();
-    expect(objectPath.has(obj, '')).to.be.false;
-    expect(objectPath.has(obj, [])).to.be.false;
-    expect(objectPath.has(obj, [''])).to.be.false;
+    expect(objectPath.has(obj, '')).to.be.equal(false);
+    expect(objectPath.has(obj, [])).to.be.equal(false);
+    expect(objectPath.has(obj, [''])).to.be.equal(false);
   });
 
   it('should test under shallow object', function() {
     var obj = getTestObj();
-    expect(objectPath.has(obj, 'a')).to.be.true;
-    expect(objectPath.has(obj, ['a'])).to.be.true;
-    expect(objectPath.has(obj, 'z')).to.be.false;
-    expect(objectPath.has(obj, ['z'])).to.be.false;
+    expect(objectPath.has(obj, 'a')).to.be.equal(true);
+    expect(objectPath.has(obj, ['a'])).to.be.equal(true);
+    expect(objectPath.has(obj, 'z')).to.be.equal(false);
+    expect(objectPath.has(obj, ['z'])).to.be.equal(false);
   });
 
   it('should work with number path', function() {
     var obj = getTestObj();
-    expect(objectPath.has(obj.b.d, 0)).to.be.true;
-    expect(objectPath.has(obj.b, 0)).to.be.false;
-    expect(objectPath.has(obj.b.d, 10)).to.be.false;
-    expect(objectPath.has(obj.b, 10)).to.be.false;
+    expect(objectPath.has(obj.b.d, 0)).to.be.equal(true);
+    expect(objectPath.has(obj.b, 0)).to.be.equal(false);
+    expect(objectPath.has(obj.b.d, 10)).to.be.equal(false);
+    expect(objectPath.has(obj.b, 10)).to.be.equal(false);
   });
 
   it('should test under deep object', function() {
     var obj = getTestObj();
-    expect(objectPath.has(obj, 'b.f')).to.be.true;
-    expect(objectPath.has(obj, ['b','f'])).to.be.true;
-    expect(objectPath.has(obj, 'b.g')).to.be.false;
-    expect(objectPath.has(obj, ['b','g'])).to.be.false;
+    expect(objectPath.has(obj, 'b.f')).to.be.equal(true);
+    expect(objectPath.has(obj, ['b','f'])).to.be.equal(true);
+    expect(objectPath.has(obj, 'b.g')).to.be.equal(false);
+    expect(objectPath.has(obj, ['b','g'])).to.be.equal(false);
   });
 
   it('should test value under array', function() {
     var obj = getTestObj();
-    expect(objectPath.has(obj, 'b.d.0')).to.be.true;
-    expect(objectPath.has(obj, ['b','d',0])).to.be.true;
+    expect(objectPath.has(obj, 'b.d.0')).to.be.equal(true);
+    expect(objectPath.has(obj, ['b','d',0])).to.be.equal(true);
   });
 
   it('should test the value under array deep', function() {
     var obj = getTestObj();
-    expect(objectPath.has(obj, 'b.e.1.f')).to.be.true;
-    expect(objectPath.has(obj, ['b','e',1,'f'])).to.be.true;
-    expect(objectPath.has(obj, 'b.e.1.f.g.h.i')).to.be.false;
-    expect(objectPath.has(obj, ['b','e',1,'f','g','h','i'])).to.be.false;
+    expect(objectPath.has(obj, 'b.e.1.f')).to.be.equal(true);
+    expect(objectPath.has(obj, ['b','e',1,'f'])).to.be.equal(true);
+    expect(objectPath.has(obj, 'b.e.1.f.g.h.i')).to.be.equal(false);
+    expect(objectPath.has(obj, ['b','e',1,'f','g','h','i'])).to.be.equal(false);
   });
 
   it('should test the value under integer-like key', function() {
     var obj = { '1a': 'foo' };
-    expect(objectPath.has(obj, '1a')).to.be.true;
-    expect(objectPath.has(obj, ['1a'])).to.be.true;
+    expect(objectPath.has(obj, '1a')).to.be.equal(true);
+    expect(objectPath.has(obj, ['1a'])).to.be.equal(true);
   });
 
   it('should distinct nonexistent key and key = undefined', function() {
     var obj = {};
-    expect(objectPath.has(obj, 'key')).to.be.false;
+    expect(objectPath.has(obj, 'key')).to.be.equal(false);
 
     obj.key = undefined;
-    expect(objectPath.has(obj, 'key')).to.be.true;
+    expect(objectPath.has(obj, 'key')).to.be.equal(true);
   });
 });
 
@@ -675,10 +756,10 @@ describe('bind object', function () {
     var obj = getTestObj();
     var model = objectPath(obj);
 
-    expect(model.has('a')).to.be.true;
-    expect(model.has(['a'])).to.be.true;
-    expect(model.has('z')).to.be.false;
-    expect(model.has(['z'])).to.be.false;
+    expect(model.has('a')).to.be.equal(true);
+    expect(model.has(['a'])).to.be.equal(true);
+    expect(model.has('z')).to.be.equal(false);
+    expect(model.has(['z'])).to.be.equal(false);
   });
 
 });
