@@ -16,13 +16,13 @@ Access deep properties using a path
 ### Node.js
 
 ```
-npm install object-path
+npm install object-path --save
 ```
 
 ### Browser
 
 ```
-bower install object-path
+bower install object-path --save
 ```
 
 ### Typescript typings
