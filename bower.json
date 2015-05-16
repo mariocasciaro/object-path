@@ -6,7 +6,17 @@
     "path",
     "access",
     "bean",
-    "object"
+    "get",
+    "property",
+    "dot",
+    "prop",
+    "object",
+    "obj",
+    "notation",
+    "segment",
+    "value",
+    "nested",
+    "key"
   ],
   "ignore" : [
     "test.js",
