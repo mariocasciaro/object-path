@@ -1,3 +1,18 @@
+//(function (root, factory){
+//    'use strict';
+//
+//    /* istanbul ignore next */
+//    if (typeof module === 'object' && typeof module.exports === 'object') {
+//        module.exports = factory();
+//    } else if (typeof define === 'function' && define.amd) {
+//    // AMD. Register as an anonymous module.
+//        define([], factory);
+//    } else {
+//    // Browser globals
+//        root.objectPath = factory();
+//    }
+//})(this, function(){
+
 module ObjectPath {
   'use strict';
   
@@ -26,7 +41,7 @@ module ObjectPath {
     return base;
   }
   
-  function isEmpty(value: any, ownPropertiesOnly: boolean){
+  function isEmpty(value: any, ownPropertiesOnly: boolean): boolean {
     // String, boolean, number that is either '', false or 0 respectivelly or null and undefined
     if (!value) {
       return true;
@@ -86,7 +101,7 @@ module ObjectPath {
     return key;
   }
   
-  function ensureExists(obj: any, path: any, value: any, options: ObjectPathModule.IObjectPathOptions) {
+  function ensureExists(obj: any, path: any, value: any, options: ObjectPathModule.IObjectPathOptions): any {
     return set(obj, path, value, true, options);
   }
   
@@ -101,7 +116,7 @@ module ObjectPath {
     
     if (isString(path)) {
       path = path.split('.');
-      return set(obj, (options.numberAsArray ? path.map(getKey) : path), value, doNotReplace, options);
+      return set(obj, (!options.numberAsArray ? path : path.map(getKey)), value, doNotReplace, options);
     }
     
     var currentPath = path[0];
@@ -163,7 +178,7 @@ module ObjectPath {
     return obj;
   }
   
-  function has(obj: any, path: any, ownPropertiesOnly: boolean) {
+  function has(obj: any, path: any, ownPropertiesOnly: boolean): boolean {
     if (isEmpty(obj, ownPropertiesOnly)) {
       return false;
     }
@@ -191,6 +206,8 @@ module ObjectPath {
         } else {
           if (j in obj) {
             obj = obj[j];
+          } else {
+            return false;
           }
         }
       } else {
@@ -254,6 +271,8 @@ module ObjectPath {
       } else {
         args.pop();
       }
+    } else {
+      options = defaultOptions;
     }
     
     var arr = get(obj, path, void 0, options.ownPropertiesOnly);
@@ -265,7 +284,7 @@ module ObjectPath {
     arr.push.apply(arr, args);
   }
   
-  function coalesce(obj: any, paths: any, defaultValue: any, ownPropertiesOnly: boolean) {
+  function coalesce<T>(obj: any, paths: any, defaultValue: T, ownPropertiesOnly: boolean): T {
     var value: any;
   
     for (var i = 0, len = paths.length; i < len; i++) {
@@ -308,7 +327,7 @@ module ObjectPath {
   
   export class Class implements ObjectPathModule.IObjectPath {
     public options: ObjectPathModule.IObjectPathOptions;
-    public static Class: typeof Class = Class;
+    public Class: typeof Class = Class;
     
     constructor(options?: ObjectPathModule.IObjectPathOptions) { 
       this.options = merge({}, defaultOptions, options);
@@ -339,6 +358,21 @@ module ObjectPath {
       var base: ObjectPathModule.IObjectPathExtenderBase = {
         set,
         merge,
+        coalesce,
+        del,
+        empty,
+        ensureExists,
+        get,
+        getKey,
+        has,
+        insert,
+        isArray,
+        isBoolean,
+        isEmpty,
+        isNumber,
+        isObject,
+        isString,
+        push
       };
       
       merge(this, ctor(base, this.options));
@@ -388,4 +422,5 @@ module ObjectPath {
   
 }
 
-export = new ObjectPath.Class();
+//    return new ObjectPath.Class();
+//});

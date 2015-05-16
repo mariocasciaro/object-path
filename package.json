@@ -21,7 +21,7 @@
     "istanbul": "^0.3.13"
   },
   "scripts": {
-    "test": "istanbul cover ./node_modules/mocha/bin/_mocha test.js --report html -- -R spec"
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha test.js --report html -x test.js -- -R spec"
   },
   "keywords": [
     "deep",

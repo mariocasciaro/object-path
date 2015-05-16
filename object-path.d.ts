@@ -19,6 +19,23 @@ declare module ObjectPathModule {
   
   export interface IObjectPathExtenderBase extends IObjectPathBase {
     merge(base: any, ...args: any[]): any;
+    isEmpty(value: any, ownPropertiesOnly: boolean): boolean;
+    toString(type: any): string;
+    isNumber(value: any): boolean;
+    isString(obj: any): boolean;
+    isObject(obj: any): boolean;
+    isArray(obj: any): boolean;
+    isBoolean(obj: any): boolean;
+    getKey(key: string): number|string;
+    ensureExists(obj: any, path: any, value: any, options: ObjectPathModule.IObjectPathOptions): any;  
+    set(obj: any, path: any, value: any, doNotReplace: boolean, options: ObjectPathModule.IObjectPathOptions): any;
+    del(obj: any, path: any, ownPropertiesOnly: boolean): any;
+    has(obj: any, path: any, ownPropertiesOnly: boolean): boolean;
+    insert(obj: any, path: any, value: any, at: number, options: ObjectPathModule.IObjectPathOptions): void;
+    empty(obj: any, path: any, options: ObjectPathModule.IObjectPathOptions): any;
+    push(obj: any, path: any, ...args: any[]): void;
+    coalesce<T>(obj: any, paths: any, defaultValue: T, ownPropertiesOnly: boolean): T;
+    get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly: boolean): T;
   }
   
   export interface IObjectPath extends IObjectPathBase {
