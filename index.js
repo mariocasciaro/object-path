@@ -1,19 +1,19 @@
 (function (root, factory){
-  'use strict';
-
-  /*istanbul ignore next:cant test*/
-  if (typeof module === 'object' && typeof module.exports === 'object') {
-    module.exports = factory();
-  } else if (typeof define === 'function' && define.amd) {
+    'use strict';
+    
+    /*istanbul ignore next:cant test*/
+    if (typeof module === 'object' && typeof module.exports === 'object') {
+        module.exports = factory();
+    } else if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
-    define([], factory);
-  } else {
+        define([], factory);
+    } else {
     // Browser globals
-    root.objectPath = factory();
-  }
+        root.objectPath = factory();
+    }
 })(this, function(){
-  var ObjectPath;
-  (function (ObjectPath) {
+    var ObjectPath;
+    (function (ObjectPath) {
     'use strict';
     var toStr = Object.prototype.toString, _hasOwnProperty = Object.prototype.hasOwnProperty;
     var defaultOptions = {
@@ -352,7 +352,7 @@
         return Class;
     })();
     ObjectPath.Class = Class;
-  })(ObjectPath || (ObjectPath = {}));
-  
-  return new ObjectPath.Class();
+    })(ObjectPath || (ObjectPath = {}));
+    
+    return new ObjectPath.Class();
 });
