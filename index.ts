@@ -16,8 +16,15 @@ export interface IObjectPathOptions {
 }
 
 export interface IObjectPath {
-  new (options?: IObjectPathOptions): IObjectPath;
   options: IObjectPathOptions;
+}
+
+export interface IObjectPathBound {
+  
+}
+
+export interface IObjectPathConstructor {
+  new (options?: IObjectPathOptions): IObjectPath;
 }
 
 export type IObjectPathPathTypes = Array<string|number>|number|string;
@@ -31,7 +38,7 @@ const defaultOptions: IObjectPathOptions = {
   ownPropertiesOnly: true
 };
 
-function merge(base: Object, ...args: Object[]) {
+function merge(base: any, ...args: any[]) {
   if (!isObject(base)) {
     base = {};
   }
@@ -111,7 +118,7 @@ function ensureExists(obj: any, path: any, value: any, options: IObjectPathOptio
   return set(obj, path, value, true, options);
 }
 
-function set(obj: any, path: any, value: any, doNotReplace: boolean, options: IObjectPathOptions) {
+function set(obj: any, path: any, value: any, doNotReplace: boolean, options: IObjectPathOptions): any {
   if (isNumber(path)) {
     path = [path];
   }
@@ -135,9 +142,13 @@ function set(obj: any, path: any, value: any, doNotReplace: boolean, options: IO
   }
 
   if (obj[currentPath] === void 0) {
-    // Check if we assume an array per provided options
     if(isNumber(path[1])) {
-      obj[currentPath] = [];
+      // Check if we assume an array per provided options
+      if (!options.numberAsArray) {
+        obj[currentPath] = {};
+      } else {
+        obj[currentPath] = [];
+      }
     } else {
       obj[currentPath] = {};
     }
@@ -146,7 +157,7 @@ function set(obj: any, path: any, value: any, doNotReplace: boolean, options: IO
   return set(obj[currentPath], path.slice(1), value, doNotReplace, options);
 }
 
-function del(obj: any, path: any, ownPropertiesOnly: boolean) {
+function del(obj: any, path: any, ownPropertiesOnly: boolean): any {
   if (isNumber(path)) {
     path = [path];
   }
@@ -183,7 +194,7 @@ function del(obj: any, path: any, ownPropertiesOnly: boolean) {
   return obj;
 }
 
-function has(obj: any, path: any, ownPropertiesOnly: boolean = true) {
+function has(obj: any, path: any, ownPropertiesOnly: boolean) {
   if (isEmpty(obj, ownPropertiesOnly)) {
     return false;
   }
@@ -232,7 +243,7 @@ function insert(obj: any, path: any, value: any, at: number, options: IObjectPat
   arr.splice(at, 0, value);
 }
 
-function empty(obj, path, options: IObjectPathOptions) {
+function empty(obj: any, path: any, options: IObjectPathOptions) {
   if (isEmpty(path, options.ownPropertiesOnly)) {
     return obj;
   }
@@ -240,7 +251,8 @@ function empty(obj, path, options: IObjectPathOptions) {
     return void 0;
   }
 
-  var value, i;
+  var value: any;
+  
   if (!(value = get(obj, path, void 0, options.ownPropertiesOnly))) {
     return obj;
   }
@@ -254,7 +266,7 @@ function empty(obj, path, options: IObjectPathOptions) {
   } else if (isArray(value)) {
     value.length = 0;
   } else if (isObject(value)) {
-    for (i in value) {
+    for (let i in value) {
       if (_hasOwnProperty.call(value, i)) {
         delete value[i];
       }
@@ -265,28 +277,38 @@ function empty(obj, path, options: IObjectPathOptions) {
 }
 
 function push(obj: any, path: any, ...args: any[]){
-  var arr = get(obj, path, void 0);
+  var options: IObjectPathOptions = args[args.length-1];
+  
+  if (isObject(options)) {
+    if (!('ownPropertiesOnly' in options)) {
+      options = defaultOptions;
+    } else {
+      args.pop();
+    }
+  }
+  
+  var arr = get(obj, path, void 0, options.ownPropertiesOnly);
   if (!isArray(arr)) {
     arr = [];
-    set(obj, path, arr, false, {});
+    set(obj, path, arr, false, options);
   }
 
   arr.push.apply(arr, args);
-};
+}
 
-function coalesce(obj: any, paths: any, defaultValue: any, ownPropertiesOnly?: boolean) {
-  var value;
+function coalesce(obj: any, paths: any, defaultValue: any, ownPropertiesOnly: boolean) {
+  var value: any = defaultValue;
 
   for (var i = 0, len = paths.length; i < len; i++) {
     if ((value = get(obj, paths[i], void 0, ownPropertiesOnly)) !== void 0) {
-      return value;
+      break;
     }
   }
 
-  return defaultValue;
-};
+  return value;
+}
 
-function get<T>(obj: any, path: any, defaultValue?: T, ownPropertiesOnly: boolean = defaultOptions.ownPropertiesOnly): T {
+function get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly: boolean): T {
   if (isNumber(path)) {
     path = [path];
   }
@@ -346,22 +368,26 @@ export class ObjectPath implements IObjectPath {
     return has(obj, path, this.options.ownPropertiesOnly);
   }
   
-  public coalesce(obj, paths: IObjectPathPathTypes[], defaultValue) {
+  public coalesce(obj: Object, paths: IObjectPathPathTypes[], defaultValue: any) {
     return coalesce(obj, paths, defaultValue, this.options.ownPropertiesOnly);
   }
   
   public push(obj: Object, path: IObjectPathPathTypes, ...args: any[]) {
-    return push(obj, path, ...args);
+    var _args: any[] = [];
+    Array.prototype.push.call(_args, args, this.options);
+    return push(obj, path, ..._args);
   }
   
   public insert(obj: Object, path: IObjectPathPathTypes, value: any, at: number) {
     return insert(obj, path, value, at, this.options);
   }
   
-  /*public bind(obj: Object): IObjectPath {
+  public bind(obj: Object): IObjectPathBound {
+    var self: any = this, out: any = {}; 
+    
     return Object.keys(this).reduce((proxy, prop) => {
-      if (typeof this[prop] === 'function') {
-        /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) /
+      if (typeof self[prop] === 'function') {
+        /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
         proxy[prop] = function(){ 
           var args = [obj];
           Array.prototype.push.apply(args, arguments);
@@ -370,8 +396,8 @@ export class ObjectPath implements IObjectPath {
       }
   
       return proxy;
-    }, {});
-  }*/
+    }, out);
+  }
     
 }
 
