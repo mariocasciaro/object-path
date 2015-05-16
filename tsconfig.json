@@ -6,6 +6,7 @@
 		"target": "ES5"
 	},
 	"files": [
+		"object-path.d.ts",
 		"index.ts"
 	]
 }

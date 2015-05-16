@@ -605,36 +605,36 @@ describe('bind object', function () {
   // just get one scenario from each feature, so whole functionality is proxied well
   it('should return the value under shallow object', function() {
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
     expect(model.get('a')).to.be.equal('b');
     expect(model.get(['a'])).to.be.equal('b');
   });
 
   it('should set value under shallow object', function() {
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
     model.set('c', {m: 'o'});
     expect(obj).to.have.deep.property('c.m', 'o');
     obj = getTestObj();
-    model = objectPath(obj);
+    model = objectPath.bind(obj);
     model.set(['c'], {m: 'o'});
     expect(obj).to.have.deep.property('c.m', 'o');
   });
 
   it('should push value to existing array', function() {
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
     model.push('b.c', 'l');
     expect(obj).to.have.deep.property('b.c.0', 'l');
     obj = getTestObj();
-    model = objectPath(obj);
+    model = objectPath.bind(obj);
     model.push(['b','c'], 'l');
     expect(obj).to.have.deep.property('b.c.0', 'l');
   });
 
   it('should create the path if it does not exists', function() {
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
     var oldVal = model.ensureExists('b.g.1.l', 'test');
     expect(oldVal).to.not.exist;
     expect(obj).to.have.deep.property('b.g.1.l', 'test');
@@ -647,7 +647,7 @@ describe('bind object', function () {
     var obj = {
       should: {have: 'prop'}
     };
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
 
     expect(model.coalesce([
       'doesnt.exist',
@@ -684,7 +684,7 @@ describe('bind object', function () {
     /*istanbul ignore next: not part of code */
     obj['function'] = function(){};
 
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
 
     model.empty(['array','2']);
     expect(obj.array[2]).to.deep.equal([]);
@@ -716,7 +716,7 @@ describe('bind object', function () {
 
   it('should delete deep paths', function(){
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
 
     expect(model.del()).to.be.equal(obj);
 
@@ -746,7 +746,7 @@ describe('bind object', function () {
 
   it('should insert value into existing array', function(){
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
 
     model.insert('b.c', 'asdf');
     expect(obj).to.have.deep.property('b.c.0', 'asdf');
@@ -755,7 +755,7 @@ describe('bind object', function () {
 
   it('should test under shallow object', function() {
     var obj = getTestObj();
-    var model = objectPath(obj);
+    var model = objectPath.bind(obj);
 
     expect(model.has('a')).to.be.equal(true);
     expect(model.has(['a'])).to.be.equal(true);
