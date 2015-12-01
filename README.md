@@ -19,7 +19,7 @@ Access deep properties using a path
 npm install object-path --save
 ```
 
-### Browser
+### Bower
 
 ```
 bower install object-path --save
@@ -108,6 +108,11 @@ model.del("a.b"); // obj.a.b is now undefined
 model.has("a.b"); // false
 
 ```
+
+### Immutability
+
+If you are looking for an *immutable* alternative of this library, you can take a look at: [object-path-immutable](https://github.com/mariocasciaro/object-path-immutable)
+
 
 ### Credits
 
