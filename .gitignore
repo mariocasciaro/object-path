@@ -5,3 +5,8 @@ node_modules
 npm-debug.log
 generated
 coverage
+index.ts
+.vscode
+tsconfig.json
+test-ts.ts
+index.d.ts

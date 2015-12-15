@@ -1,8 +1,11 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
+		"module": "umd",
 		"noImplicitAny": true,
 		"noResolve": true,
+    "declaration": true,
+    "removeComments": true,
+    "newLine": "LF",
 		"target": "ES5"
 	},
 	"files": [

@@ -1,6 +1,6 @@
 {
   "name": "object-path",
-  "main": "index.js",
+  "main": "./index.js",
   "keywords": [
     "deep",
     "path",
