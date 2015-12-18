@@ -6,9 +6,10 @@
     "declaration": true,
     "removeComments": true,
     "newLine": "LF",
-		"target": "ES5"
+		"target": "es5"
 	},
 	"files": [
+		"symbol.d.ts",
 		"object-path.d.ts",
 		"index.ts"
 	]

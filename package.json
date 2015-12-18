@@ -30,7 +30,8 @@
     "standard": "^5.4.1"
   },
   "scripts": {
-    "test": "standard --format index.js && istanbul cover ./node_modules/mocha/bin/_mocha test.js --report html -x test.js -- -R spec"
+    "format": "standard --format index.js",
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha test.js --report html -x test.js -- -R spec"
   },
   "keywords": [
     "deep",

@@ -5,5 +5,4 @@ node_js:
   - "4"
   - "0.12"
   - "0.10"
-  - "iojs"
 after_script: NODE_ENV=test standard --format index.js && istanbul cover ./node_modules/mocha/bin/_mocha test.js --report lcovonly -x test.js -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage

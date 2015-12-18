@@ -2,15 +2,14 @@
 (function (factory) {
   /* globals define * /
   if (typeof module === 'object' && typeof module.exports === 'object') {
-    var v = factory(require, exports)
-    if (v !== undefined) module.exports = v
+    factory(require, module.exports)
   } else if (typeof define === 'function' && define.amd) {
     define(['require', 'exports'], factory)
   } else {
     var x = {}
     factory(require, x)
-    window.ObjectPath = x
-    window.objectPath = window.ObjectPath.instance
+    window.ObjectPathModule = x
+    window.objectPath = window.ObjectPathModule.instance
   }
 }
 */
@@ -18,11 +17,40 @@
 
 var toStr = Object.prototype.toString
 var _hasOwnProperty = Object.prototype.hasOwnProperty
+var _hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator !== 'undefined'
 
 export const defaultOptions: ObjectPath.Options = {
   numberAsArray: true,
   ownPropertiesOnly: true
 };
+
+export function toString(type: any): string {
+  return toStr.call(type);
+}
+
+export function isNumber(value: any): boolean {
+  return typeof value === 'number' || toString(value) === "[object Number]";
+}
+
+export function isString(obj: any): boolean {
+  return typeof obj === 'string' || toString(obj) === "[object String]";
+}
+
+export function isObject(obj: any): boolean {
+  return typeof obj === 'object' && toString(obj) === "[object Object]";
+}
+
+export function isSymbol(obj: any): boolean {
+  return _hasSymbols && (typeof obj === 'symbol' || toString(obj) === '[object Symbol]');
+}
+
+export function isArray(obj: any): boolean {
+  return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
+}
+
+export function isBoolean(obj: any): boolean {
+  return typeof obj === 'boolean' || toString(obj) === '[object Boolean]';
+}
 
 export function merge(base: any, ...args: any[]): any {
   if (!isObject(base)) {
@@ -48,6 +76,8 @@ export function isEmpty(value: any, ownPropertiesOnly: boolean = defaultOptions.
 
   if (isArray(value) && value.length === 0) {
     return true;
+  } else if (isSymbol(value)) {
+    return false;
   } else if (!isString(value)) {
     for (var i in value) {
       if (ownPropertiesOnly === true) {
@@ -65,32 +95,12 @@ export function isEmpty(value: any, ownPropertiesOnly: boolean = defaultOptions.
   return false;
 }
 
-export function toString(type: any): string {
-  return toStr.call(type);
-}
+export function getKey(key: string | symbol): number | string | symbol {
+  if (isSymbol(key)) {
+    return key;
+  }
 
-export function isNumber(value: any): boolean {
-  return typeof value === 'number' || toString(value) === "[object Number]";
-}
-
-export function isString(obj: any): boolean {
-  return typeof obj === 'string' || toString(obj) === "[object String]";
-}
-
-export function isObject(obj: any): boolean {
-  return typeof obj === 'object' && toString(obj) === "[object Object]";
-}
-
-export function isArray(obj: any): boolean {
-  return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
-}
-
-export function isBoolean(obj: any): boolean {
-  return typeof obj === 'boolean' || toString(obj) === '[object Boolean]';
-}
-
-export function getKey(key: string): number | string {
-  var intKey = parseInt(key, 10);
+  var intKey = parseInt(<string>key, 10);
 
   if (intKey.toString() === key) {
     // Return the integer if it's a real number
@@ -105,7 +115,7 @@ export function ensureExists(obj: any, path: any, value: any, ownPropertiesOnly:
 }
 
 export function set(obj: any, path: any, value: any, doNotReplace: boolean, ownPropertiesOnly: boolean = defaultOptions.ownPropertiesOnly, numberAsArray: boolean = defaultOptions.numberAsArray): any {
-  if (isNumber(path)) {
+  if (isNumber(path) || isSymbol(path)) {
     path = [path];
   }
 
@@ -141,7 +151,7 @@ export function set(obj: any, path: any, value: any, doNotReplace: boolean, ownP
 }
 
 export function del(obj: any, path: any, ownPropertiesOnly: boolean = defaultOptions.ownPropertiesOnly): any {
-  if (isNumber(path)) {
+  if (isNumber(path) || isSymbol(path)) {
     path = [path];
   }
 
@@ -182,7 +192,7 @@ export function has(obj: any, path: any, ownPropertiesOnly: boolean = defaultOpt
     return false;
   }
 
-  if (isNumber(path)) {
+  if (isNumber(path) || isSymbol(path)) {
     path = [path];
   } else if (isString(path)) {
     path = path.split('.');
@@ -261,13 +271,15 @@ export function empty(obj: any, path: any, ownPropertiesOnly: boolean = defaultO
   }
 }
 
-export function push(obj: any, path: any, args: any[], ownPropertiesOnly: boolean = defaultOptions.ownPropertiesOnly, numberAsArray: boolean = defaultOptions.numberAsArray): void {
+export function push(obj: any, path: any, args: any|any[], ownPropertiesOnly: boolean = defaultOptions.ownPropertiesOnly, numberAsArray: boolean = defaultOptions.numberAsArray): void {
   var arr = get(obj, path, void 0, ownPropertiesOnly);
   if (!isArray(arr)) {
     arr = [];
     set(obj, path, arr, false, ownPropertiesOnly, numberAsArray);
   }
-
+  if (!isArray(args)) {
+    args = [args];
+  }
   arr.push.apply(arr, args);
 }
 
@@ -284,7 +296,7 @@ export function coalesce<T>(obj: any, paths: any, defaultValue: T, ownProperties
 }
 
 export function get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly: boolean = defaultOptions.ownPropertiesOnly): T {
-  if (isNumber(path)) {
+  if (isNumber(path) || isSymbol(path)) {
     path = [path];
   }
 
@@ -313,6 +325,33 @@ export function get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly: 
 }
 
 var skipProps: any = { 'bind': true, 'extend': true, 'option': true };
+
+export function bind<O>(obj: O, from?: ObjectPath.Class): ObjectPath.Bound<O> {
+  var funcNames: any = [];
+  var base: any;
+
+  if (typeof from === 'undefined') {
+    base = new Class();
+  } else {
+    base = from;
+  }
+
+  for (var x in base) {
+    if (typeof base[x] === 'function' && skipProps[x] !== true) {
+      funcNames.push(x);
+    }
+  }
+
+  return funcNames.reduce(function(proxy: any, prop: string) {
+    /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
+    proxy[prop] = function() {
+      var args = [obj]
+      Array.prototype.push.apply(args, arguments)
+      return base[prop].apply(base, args)
+    }
+    return proxy
+  }, {})
+}
 
 export class Class implements ObjectPath.Class {
   public options: ObjectPath.Options;
@@ -350,6 +389,7 @@ export class Class implements ObjectPath.Class {
       del,
       empty,
       ensureExists,
+      isSymbol,
       get,
       getKey,
       has,
@@ -376,7 +416,7 @@ export class Class implements ObjectPath.Class {
     return coalesce(obj, paths, defaultValue, this.options.ownPropertiesOnly);
   }
 
-  public push(obj: Object, path: ObjectPath.PathTypes, ...args: any[]) {
+  public push(obj: Object, path: ObjectPath.PathTypes, args: any[]|any) {
     push(obj, path, args, this.options.ownPropertiesOnly, this.options.numberAsArray);
     return this;
   }
@@ -391,25 +431,7 @@ export class Class implements ObjectPath.Class {
   }
 
   public bind<O>(obj: O): ObjectPath.Bound<O> {
-    var self: any = this;
-    var out: any = {};
-    var funcNames: any = [];
-
-    for (var x in self) {
-      if (typeof self[x] === 'function' && skipProps[x] !== true) {
-        funcNames.push(x);
-      }
-    }
-
-    return funcNames.reduce(function(proxy: any, prop: string) {
-      /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
-      proxy[prop] = function() {
-        var args = [obj]
-        Array.prototype.push.apply(args, arguments)
-        return self[prop].apply(self, args)
-      }
-      return proxy
-    }, out)
+    return bind(obj, this);
   }
 }
 
