@@ -24,13 +24,17 @@ bower install object-path --save
 #### Upgrading to 1.x from 0.x
 
 * `objectPath(obj)` now needs to be called as `objectPath.bind(obj)`
+
 * Non-existing array paths (denoted by numbers in path, such as 'a.0.b') will be created
-as array unless a new instance is created with `new objectPath.Class({numberAsArray: true})`
+as array unless a new instance is created with `new objectPath.Class({ numberAsArray: false })`
+
 * If you were adding methods directly to the global object `objectPath`, it's advised to
-use `objectPath.extend(function(op){ })` now
+use `objectPath.instance.extend(function(base, options){ })` now
+
 * By default, non-own properties won't be accessable, you must create a new instance
  using `new objectPath.Class({ ownPropertiesOnly: false })` so it can access any type of properties,
- including from Proxy and inherited classes
+ including from Proxy and inherited classes, or change the instance option by using `objectPath.instance.option({ ownPropertiesOnly: false })`
+
 * The `objectPath` global in the browser is now an instance of the ObjectPath 'class', that
 you can now derive in your code, as in:
 
@@ -44,7 +48,7 @@ MyClass.prototype = Object.create(objectPath.Class.prototype);
 
 ```es6
 // in ES6
-import objectPath from 'object-path';
+import * as objectPath from 'object-path';
 
 class MyClass extends objectPath.Class {
   constructor(options) {
@@ -53,15 +57,14 @@ class MyClass extends objectPath.Class {
 }
 ```
 
-* Each method now (`objectPath.get`, `objectPath.set`, etc) has a valid `this` context,
-so using `var set = objectPath.set; set(obj, 'path', value)` won't work. You need to either use an
-import in ES6 style (`import { del } from 'object-path'`) or bind the function to the object,
-like `var set = objectPath.set.bind(objectPath)`)
+* The functions `get`, `set`, `del`, `push`, etc that you get from `var objectPath = require('object-path')`
+behave more or like the same the version 0.x. If you want the class instance, use `var objectPath = require('object-path').instance;`.
+The same instance will be available in all your files, including any plugins you use to extend it.
 
 ## Polyfills
 
 Depending on the target engines you are using objectPath on, you'll need a
-pollyfill for `Array.reduce` and `Object.keys`
+polyfill for `Array.reduce`
 
 ## Usage
 
@@ -79,10 +82,14 @@ var obj = {
   }
 };
 
-var objectPath = require("object-path").instance; // this instance will be the same in any other files you call it
-// var objectPath = new require('object-path').Class(); // this objectPath instance will only be available in this file
-// import { set, get, del } from 'object-path'; // standalone functions
-// var ObjectPath = require('object-path'); // ObjectPath.Class, ObjectPath.instance, ObjectPath.del, etc
+// this instance will be the same in any other files you require it, it's the preferable way of using objectPath
+var objectPath = require("object-path").instance;
+
+// this objectPath instance will only be available in this file context
+// var objectPath = new require('object-path').Class();
+
+// you still have access to old functions get, set, del, push, etc, as their are standalone functions
+// var objectPath = require('object-path');
 
 //get deep property
 objectPath.get(obj, "a.b");  //returns "d"
@@ -133,7 +140,7 @@ objectPath.has(obj, "a.b"); // true
 objectPath.has(obj, ["a","d"]); // false
 
 //bind object
-var model = objectPath({
+var model = objectPath.bind({
   a: {
     b: "d",
     c: ["e", "f"]
@@ -150,7 +157,8 @@ model.has("a.b"); // false
 
 ## Extending with plugins
 
-**object-path** can be extended using plugins per instance or per global instance (`objectPath` global).
+**object-path** can be extended using plugins per instance or per global instance (`var objectPath = require('objectPath').instance`
+in Node, and `objectPath` global in browser).
 Those plugins can add new functionality or modify existing ones.
 
 To extend `objectPath`, you should use:
@@ -169,8 +177,8 @@ objectPath.extend(function(baseFunctions, instanceOptions){
 ```
 
 The returned object will be merged on the current instance. From the example, you'll be able to call
-`objectPath.tryGet(obj, 'some.path')` after the call to extend. The first `baseFunctions` object passed
-to the extend function contains all the original internal functions, that behave exactly the same even
+`objectPath.tryGet(obj, 'some.path')` after the call to extend. The first `baseFunctions` parameter
+contains all the original internal functions, that behave exactly the same even
 if you overwrite the `get`, `set`, `push`, etc methods.
 
 ```js
@@ -233,7 +241,7 @@ module.exports = function(baseFunctions, options) {
 
 ```js
 // in browser
-objectPath.extend(function(baseFunctions, options) {
+ObjectPathModule.instance.extend(function(baseFunctions, options) {
   return {
     yourFunction: function() {
     }
