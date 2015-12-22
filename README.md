@@ -3,7 +3,7 @@ object-path
 
 Access deep properties using a path
 
-[![NPM version](https://badge.fury.io/js/object-path.png)](http://badge.fury.io/js/object-path) [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path) [![Coverage Status](https://coveralls.io/repos/mariocasciaro/object-path/badge.png)](https://coveralls.io/r/mariocasciaro/object-path) [![devDependency Status](https://david-dm.org/mariocasciaro/object-path/dev-status.svg)](https://david-dm.org/mariocasciaro/object-path#info=devDependencies) ![Downloads](http://img.shields.io/npm/dm/object-path.svg) [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+[![NPM version](https://badge.fury.io/js/object-path.png)](http://badge.fury.io/js/object-path) [![Build Status](https://travis-ci.org/mariocasciaro/object-path.png)](https://travis-ci.org/mariocasciaro/object-path) [![Coverage Status](https://coveralls.io/repos/mariocasciaro/object-path/badge.png)](https://coveralls.io/r/mariocasciaro/object-path) [![devDependency Status](https://david-dm.org/mariocasciaro/object-path/dev-status.svg)](https://david-dm.org/mariocasciaro/object-path#info=devDependencies) ![Downloads](http://img.shields.io/npm/dm/object-path.svg)
 
 ## Install
 
@@ -31,26 +31,24 @@ as array unless a new instance is created with `new objectPath.Class({ numberAsA
 * If you were adding methods directly to the global object `objectPath`, it's advised to
 use `objectPath.instance.extend(function(base, options){ })` now
 
-* By default, non-own properties won't be accessable, you must create a new instance
+* By default, non-own properties won't be accessible, you must create a new instance
  using `new objectPath.Class({ ownPropertiesOnly: false })` so it can access any type of properties,
  including from Proxy and inherited classes, or change the instance option by using `objectPath.instance.option({ ownPropertiesOnly: false })`
 
-* The `objectPath` global in the browser is now an instance of the ObjectPath 'class', that
+* The `objectPath` global in the **browser** is now an instance of the ObjectPath 'class', that
 you can now derive in your code, as in:
 
 ```js
 // in ES5
 function MyClass(options) {
-  objectPath.Class.call(this, options);
+  ObjectPathModule.Class.call(this, options);
 }
-MyClass.prototype = Object.create(objectPath.Class.prototype);
+MyClass.prototype = Object.create(ObjectPathModule.Class.prototype);
 ```
 
 ```es6
 // in ES6
-import * as objectPath from 'object-path';
-
-class MyClass extends objectPath.Class {
+class MyClass extends ObjectPathModule.Class {
   constructor(options) {
     super(options);
   }
