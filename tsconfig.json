@@ -4,7 +4,7 @@
 		"noImplicitAny": true,
 		"noResolve": true,
     "declaration": true,
-    "removeComments": true,
+    "removeComments": false,
     "newLine": "LF",
 		"target": "es5"
 	},

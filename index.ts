@@ -24,20 +24,21 @@ export const defaultOptions: ObjectPath.Options = {
   ownPropertiesOnly: true
 };
 
+
 export function toString(type: any): string {
   return toStr.call(type);
 }
 
 export function isNumber(value: any): boolean {
-  return typeof value === 'number' || toString(value) === "[object Number]";
+  return typeof value === 'number' || toString(value) === '[object Number]';
 }
 
 export function isString(obj: any): boolean {
-  return typeof obj === 'string' || toString(obj) === "[object String]";
+  return typeof obj === 'string' || toString(obj) === '[object String]';
 }
 
 export function isObject(obj: any): boolean {
-  return typeof obj === 'object' && toString(obj) === "[object Object]";
+  return typeof obj === 'object' && toString(obj) === '[object Object]';
 }
 
 export function isSymbol(obj: any): boolean {
@@ -90,6 +91,14 @@ export function isEmpty(value: any, ownPropertiesOnly: boolean = defaultOptions.
         return false;
       }
     }
+
+    // symbols can't be walked with for in
+    /* istanbul ignore else */
+    if (_hasSymbols) {
+      if (Object.getOwnPropertySymbols(value).length) {
+        return false;
+      }
+    }
     return true;
   }
   return false;
@@ -132,13 +141,13 @@ export function set(obj: any, path: any, value: any, doNotReplace: boolean, ownP
 
   if (path.length === 1) {
     var oldVal = obj[currentPath];
-    if (oldVal === void 0 || !doNotReplace) {
+    if (typeof oldVal === 'undefined' || !doNotReplace) {
       obj[currentPath] = value;
     }
     return oldVal;
   }
 
-  if (obj[currentPath] === void 0) {
+  if (typeof obj[currentPath] === 'undefined') {
     if (isNumber(path[1])) {
       // Check if we assume an array per provided options, numberAsArray
       obj[currentPath] = [];
@@ -171,7 +180,7 @@ export function del(obj: any, path: any, ownPropertiesOnly: boolean = defaultOpt
   var oldVal = obj[currentPath];
 
   if (path.length === 1) {
-    if (oldVal !== void 0) {
+    if (typeof oldVal !== 'undefined') {
       if (isArray(obj)) {
         obj.splice(currentPath, 1);
       } else {
@@ -179,7 +188,7 @@ export function del(obj: any, path: any, ownPropertiesOnly: boolean = defaultOpt
       }
     }
   } else {
-    if (obj[currentPath] !== void 0) {
+    if (typeof obj[currentPath] !== 'undefined') {
       return del(obj[currentPath], path.slice(1), ownPropertiesOnly);
     }
   }
@@ -198,7 +207,7 @@ export function has(obj: any, path: any, ownPropertiesOnly: boolean = defaultOpt
     path = path.split('.');
   }
 
-  if (isEmpty(path, ownPropertiesOnly) || path.length === 0) {
+  if (isEmpty(path, ownPropertiesOnly)) {
     return false;
   }
 
@@ -246,9 +255,9 @@ export function empty(obj: any, path: any, ownPropertiesOnly: boolean = defaultO
     return void 0;
   }
 
-  var value: any;
+  var value: any = get(obj, path, Number.NaN, ownPropertiesOnly);
 
-  if (!(value = get(obj, path, void 0, ownPropertiesOnly))) {
+  if (value !== value) {
     return obj;
   }
 
@@ -262,8 +271,22 @@ export function empty(obj: any, path: any, ownPropertiesOnly: boolean = defaultO
     value.length = 0;
   } else if (isObject(value)) {
     for (var i in value) {
-      if (_hasOwnProperty.call(value, i)) {
+      if (ownPropertiesOnly === true) {
+        if (_hasOwnProperty.call(value, i)) {
+          delete value[i];
+        }
+      } else {
         delete value[i];
+      }
+    }
+
+    /* istanbul ignore else */
+    if (_hasSymbols) {
+      var symbols: symbol[] = Object.getOwnPropertySymbols(value);
+      if (symbols.length) {
+        for (var x = 0; x < symbols.length; x++) {
+          delete value[symbols[x]];
+        }
       }
     }
   } else {
@@ -287,7 +310,9 @@ export function coalesce<T>(obj: any, paths: any, defaultValue: T, ownProperties
   var value: any;
 
   for (var i = 0, len = paths.length; i < len; i++) {
-    if ((value = get(obj, paths[i], void 0, ownPropertiesOnly)) !== void 0) {
+    value = get(obj, paths[i], Number.NaN, ownPropertiesOnly);
+    // looks silly but NaN is never equal to itself, it's a good unique value
+    if (value === value) {
       return value;
     }
   }
@@ -315,7 +340,7 @@ export function get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly: 
   var currentPath = getKey(path[0]);
 
   if (path.length === 1) {
-    if (obj[currentPath] === void 0) {
+    if (typeof obj[currentPath] === 'undefined') {
       return defaultValue;
     }
     return obj[currentPath];

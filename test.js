@@ -398,14 +398,47 @@ for(var i = 0; i < tests.length; i++) {
           expect(objectPath.empty(obj, 'inexistant')).to.equal(obj);
         });
 
+        if (typeof Symbol === 'function') {
+          it('should work with symbol paths', function(){
+            var obj = {}, symbol = Symbol();
+            obj[symbol] = { one: 1, two: 2 };
+            objectPath.empty(obj, symbol);
+            expect(obj[symbol]).to.deep.equal({});
+          });
+
+          it('should work with symbols in underlaying paths', function(){
+            var obj = {}, symbol = Symbol(), three = Symbol();
+            obj[symbol] = { one: 1, two: 2 };
+            obj[symbol][three] = 3;
+            objectPath.empty(obj, symbol);
+            expect(obj[symbol]).to.deep.equal({});
+            expect(obj[symbol][three]).to.equal(void 0);
+          });
+        }
+
+        it('should deal with non-own properties', function(){
+          function B(){
+          }
+          B.prototype.g = 'ok';
+          B.prototype.o = { ok: 1 };
+
+          var b = new B();
+
+          if (type === 'instance') {
+            var objPath = new ObjectPath.Class({ ownPropertiesOnly: false });
+            objPath.empty(b, 'o');
+          } else {
+            objectPath.empty(b, 'o', false);
+          }
+
+        });
+
         it('should empty each path according to their types', function () {
           function Instance() {
             this.notOwn = true;
           }
 
-          /*istanbul ignore next: not part of code */
           Instance.prototype.test = function () { };
-          /*istanbul ignore next: not part of code */
           Instance.prototype.arr = [];
 
           var
@@ -423,7 +456,6 @@ for(var i = 0; i < tests.length; i++) {
               instance: new Instance()
             };
 
-          /*istanbul ignore next: not part of code */
           obj['function'] = function () { };
 
           objectPath.empty(obj, ['array', '2']);
@@ -465,6 +497,15 @@ for(var i = 0; i < tests.length; i++) {
           objectPath.del(obj.b.d, 1);
           expect(obj.b.d).to.deep.equal(['a']);
         });
+
+        if (typeof Symbol === 'function') {
+          it('should work with symbol path', function () {
+            var obj = getTestObj();
+            obj[Symbol.for('del')] = 'del';
+            objectPath.del(obj, Symbol.for('del'));
+            expect(obj[Symbol.for('del')]).to.equal(void 0);
+          });
+        }
 
         it('should delete deep paths', function () {
           var obj = getTestObj();
@@ -1066,6 +1107,23 @@ describe('objectPath exported helper functions', function () {
     });
 
   });
+
+  if (typeof Symbol === 'function') {
+
+    describe('isSymbol', function () {
+
+      it('detect symbols', function () {
+
+        expect(ObjectPath.isSymbol('1')).to.equal(false);
+        expect(ObjectPath.isSymbol(2)).to.equal(false);
+        expect(ObjectPath.isSymbol(Symbol())).to.equal(true);
+        expect(ObjectPath.isSymbol(Symbol.for('objectPath'))).to.equal(true);
+
+      });
+
+    });
+
+  }
 
   describe('ensureExists', function () {
 

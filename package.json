@@ -22,15 +22,21 @@
     }
   ],
   "devDependencies": {
-    "mocha": "^2.3.4",
     "chai": "^3.4.1",
-    "mocha-lcov-reporter": "^1.0.0",
     "coveralls": "^2.11.2",
+    "esformatter": "^0.8.1",
+    "esformatter-braces": "^1.2.1",
+    "esformatter-collapse-objects": "^0.5.1",
+    "esformatter-quotes": "^1.0.0",
+    "esformatter-remove-trailing-commas": "^1.0.1",
+    "esformatter-semicolons": "^1.0.3",
     "istanbul": "^0.4.1",
-    "standard": "^5.4.1"
+    "mocha": "^2.3.4",
+    "mocha-lcov-reporter": "^1.0.0"
   },
   "scripts": {
-    "format": "standard --format index.js",
+    "prepublish": "format",
+    "format": "esformatter --config ./esformatter.json -i index.js",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha test.js --report html -x test.js -- -R spec"
   },
   "keywords": [
@@ -39,6 +45,7 @@
     "access",
     "bean",
     "get",
+    "symbol",
     "property",
     "dot",
     "prop",

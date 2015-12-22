@@ -58,6 +58,11 @@ so using `var set = objectPath.set; set(obj, 'path', value)` won't work. You nee
 import in ES6 style (`import { del } from 'object-path'`) or bind the function to the object,
 like `var set = objectPath.set.bind(objectPath)`)
 
+## Polyfills
+
+Depending on the target engines you are using objectPath on, you'll need a
+pollyfill for `Array.reduce` and `Object.keys`
+
 ## Usage
 
 ```javascript
