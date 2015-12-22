@@ -35,7 +35,7 @@
     "mocha-lcov-reporter": "^1.0.0"
   },
   "scripts": {
-    "prepublish": "format",
+    "prepublish": "npm run format && mocha -x test.js -R spec test.js",
     "format": "esformatter --config ./esformatter.json -i index.js",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha test.js --report html -x test.js -- -R spec"
   },
