@@ -670,6 +670,18 @@ for(var i = 0; i < tests.length; i++) {
           obj.key = undefined;
           expect(objectPath.has(obj, 'key')).to.be.equal(true);
         });
+
+        if (typeof Symbol === 'function') {
+          it('should work with symbols', function(){
+            var obj = {};
+            obj[Symbol.for('somesymbol')] = true;
+
+            expect(objectPath.has(obj, Symbol())).to.be.equal(false);
+            expect(objectPath.has(obj, [Symbol()])).to.be.equal(false);
+            expect(objectPath.has(obj, [Symbol.for('somesymbol')])).to.be.equal(true);
+            expect(objectPath.has(obj, Symbol.for('somesymbol'))).to.be.equal(true);
+          });
+        }
       });
 
 

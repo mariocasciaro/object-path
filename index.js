@@ -37,6 +37,21 @@
     numberAsArray: true,
     ownPropertiesOnly: true
   };
+  var ObjectPathError = (function () {
+
+    function ObjectPathError (message) {
+      this.message = message;
+
+      this.name = 'ObjectPathError';
+      ReferenceError.call(this);
+    }
+
+    return ObjectPathError;
+  })();
+
+  exports.ObjectPathError = ObjectPathError;
+
+  ObjectPathError.prototype = Object.create(ReferenceError.prototype);
 
   function toString (type) {
     return toStr.call(type);
@@ -186,6 +201,10 @@
   exports.ensureExists = ensureExists;
 
   function set (obj, path, value, doNotReplace, ownPropertiesOnly, numberAsArray) {
+    if (doNotReplace === void 0) {
+      doNotReplace = false;
+    }
+
     if (ownPropertiesOnly === void 0) {
       ownPropertiesOnly = exports.defaultOptions.ownPropertiesOnly;
     }
@@ -221,7 +240,7 @@
     }
 
     if (typeof obj[currentPath] === 'undefined') {
-      if (isNumber(path[1])) {
+      if (isNumber(path[1]) && numberAsArray) {
         // Check if we assume an array per provided options, numberAsArray
 
         obj[currentPath] = [];
@@ -261,7 +280,7 @@
 
     if (path.length === 1) {
       if (typeof oldVal !== 'undefined') {
-        if (isArray(obj)) {
+        if (isArray(obj) && isNumber(currentPath)) {
           obj.splice(currentPath, 1);
         } else {
           delete obj[currentPath];
@@ -325,6 +344,10 @@
   exports.has = has;
 
   function insert (obj, path, value, at, ownPropertiesOnly, numberAsArray) {
+    if (at === void 0) {
+      at = 0;
+    }
+
     if (ownPropertiesOnly === void 0) {
       ownPropertiesOnly = exports.defaultOptions.ownPropertiesOnly;
     }
@@ -427,7 +450,7 @@
       args = [args];
     }
 
-    arr.push.apply(arr, args);
+    Array.prototype.push.apply(arr, args);
   }
 
   exports.push = push;

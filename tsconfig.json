@@ -9,8 +9,9 @@
 		"target": "es5"
 	},
 	"files": [
-		"symbol.d.ts",
 		"object-path.d.ts",
+    "symbol.d.ts",
+    "test-ts.ts",
 		"index.ts"
 	]
 }

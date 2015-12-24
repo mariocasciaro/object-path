@@ -157,7 +157,7 @@ model.has("a.b"); // false
 
 **object-path** can be extended using plugins per instance or per global instance (`var objectPath = require('objectPath').instance`
 in Node, and `objectPath` global in browser).
-Those plugins can add new functionality or modify existing ones.
+Those plugins can add new functionality or modify existing methods.
 
 To extend `objectPath`, you should use:
 

@@ -11,71 +11,78 @@ declare namespace ObjectPath {
     ownPropertiesOnly?: boolean;
   }
 
-  export type PathTypes = Array<string | number | symbol> | number | string  | symbol;
+  export interface PathTypesAny {
+    [index: string]: any;
+  }
+  export type PathTypes = (Array<string | number | symbol>) | (number | string  | symbol | PathTypesAny);
   export type Extender = (base: ExtenderBase, options: Options) => Object;
   export const defaultOptions: Options;
 
   export function toString(type: any): string;
-  export function isNumber(value: any): boolean;
-  export function isString(obj: any): boolean;
-  export function isObject(obj: any): boolean;
-  export function isSymbol(obj: any): boolean;
-  export function isArray(obj: any): boolean;
-  export function isBoolean(obj: any): boolean;
+  export function isNumber(value: any): value is number;
+  export function isString(obj: any): obj is string;
+  export function isObject(obj: any): obj is Object;
+  export function isSymbol(obj: any): obj is symbol;
+  export function isArray(obj: any): obj is any[];
+  export function isBoolean(obj: any): obj is boolean;
   export function merge(base: any, ...args: any[]): any;
-  export function isEmpty(value: any, ownPropertiesOnly?: boolean): boolean;
+  export function isEmpty(value: string | boolean | symbol | number | Array<any> | Object, ownPropertiesOnly?: boolean): boolean;
   export function getKey(key: string | symbol): number | string | symbol;
-  export function ensureExists(obj: any, path: any, value: any, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
-  export function set(obj: any, path: any, value: any, doNotReplace: boolean, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
-  export function del(obj: any, path: any, ownPropertiesOnly?: boolean): any;
-  export function has(obj: any, path: any, ownPropertiesOnly?: boolean): boolean;
-  export function insert(obj: any, path: any, value: any, at: number, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
-  export function empty(obj: any, path: any, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
-  export function push(obj: any, path: any, args: any | any[], ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
-  export function coalesce<T>(obj: any, paths: any, defaultValue: T, ownPropertiesOnly?: boolean): T;
-  export function get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly?: boolean): T;
-  export function bind<O>(obj: O, from?: Class): Bound<O>;
+  export function ensureExists<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
+  export function set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, doNotReplace?: boolean, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
+  export function del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, ownPropertiesOnly?: boolean): any;
+  export function has<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, ownPropertiesOnly?: boolean): boolean;
+  export function insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at?: number, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
+  export function empty<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
+  export function push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: Array<any>, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
+  export function coalesce<O extends ObjectPath.O, T>(obj: O, paths: ObjectPath.PathTypes[], defaultValue: T, ownPropertiesOnly?: boolean): T;
+  export function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue: T, ownPropertiesOnly?: boolean): T;
+  export function bind<O extends ObjectPath.O>(obj: O, from?: ObjectPath.Class): ObjectPath.Bound<O>;
 
   export var instance: Class;
+
+  export interface O extends Object, Array<any> {
+    [index: string]: any;
+  }
 
   export interface Base {
   }
 
   export interface ExtenderBase extends Base {
     toString(type: any): string;
-    isNumber(value: any): boolean;
-    isString(obj: any): boolean;
-    isObject(obj: any): boolean;
-    isSymbol(obj: any): boolean;
-    isArray(obj: any): boolean;
-    isBoolean(obj: any): boolean;
+    isNumber(value: any): value is number;
+    isString(obj: any): obj is string;
+    isObject(obj: any): obj is Object;
+    isSymbol(obj: any): obj is symbol;
+    isArray(obj: any): obj is any[];
+    isBoolean(obj: any): obj is boolean;
     merge(base: any, ...args: any[]): any;
-    isEmpty(value: any, ownPropertiesOnly?: boolean): boolean;
+    isEmpty(value: string | boolean | symbol | number | Array<any> | Object, ownPropertiesOnly?: boolean): boolean;
     getKey(key: string | symbol): number | string | symbol;
-    ensureExists(obj: any, path: any, value: any, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
-    set(obj: any, path: any, value: any, doNotReplace: boolean, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
-    del(obj: any, path: any, ownPropertiesOnly?: boolean): any;
-    has(obj: any, path: any, ownPropertiesOnly?: boolean): boolean;
-    insert(obj: any, path: any, value: any, at: number, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
-    empty(obj: any, path: any, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
-    push(obj: any, path: any, args: any | any[], ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
-    coalesce<T>(obj: any, paths: any, defaultValue: T, ownPropertiesOnly?: boolean): T;
-    get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly?: boolean): T;
+    ensureExists<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
+    set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, doNotReplace?: boolean, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
+    del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, ownPropertiesOnly?: boolean): any;
+    has<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, ownPropertiesOnly?: boolean): boolean;
+    insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at?: number, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
+    empty<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, ownPropertiesOnly?: boolean, numberAsArray?: boolean): any;
+    push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: Array<any>, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
+    coalesce<O extends ObjectPath.O, T>(obj: O, paths: ObjectPath.PathTypes[], defaultValue: T, ownPropertiesOnly?: boolean): T;
+    get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue: T, ownPropertiesOnly?: boolean): T;
   }
 
   export interface ObjectPath extends Base {
-    set(obj: Object, path: PathTypes, value: any, doNotReplace: boolean): any;
-    ensureExists(obj: Object, path: PathTypes, value: any): any;
-    get<T>(obj: Object, path: PathTypes, defaultValue?: T): T;
-    del(obj: Object, path: PathTypes): any;
-    option(options: Options): ObjectPath;
-    extend(ctor: Extender): ObjectPath;
-    has(obj: Object, path: PathTypes): boolean;
-    coalesce(obj: Object, paths: PathTypes[], defaultValue: any): any;
-    push(obj: Object, path: PathTypes, args: any|any[]): ObjectPath;
-    insert(obj: Object, path: PathTypes, value: any, at: number): ObjectPath;
-    empty(obj: Object, path: PathTypes): any;
-    bind<O extends Object>(obj: O): Bound<O>;
+    set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, doNotReplace: boolean): any;
+    ensureExists<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any): any;
+    get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue?: T): T;
+    del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes): any;
+    option(options: ObjectPath.Options): ObjectPath.Class;
+    extend(ctor: ObjectPath.Extender): ObjectPath.Class;
+    has<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes): boolean;
+    coalesce<O extends ObjectPath.O>(obj: O, paths: ObjectPath.PathTypes[], defaultValue: any): any;
+    push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: any[] | any): ObjectPath.Class;
+    insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at: number): ObjectPath.Class;
+    empty<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes): any;
+    bind<O extends ObjectPath.O>(obj: O): ObjectPath.Bound<O>;
   }
 
   export interface Class extends ObjectPath {
