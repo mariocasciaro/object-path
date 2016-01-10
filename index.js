@@ -52,7 +52,7 @@
   }
 
   function isArray(obj){
-    return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
+    return obj !== null && typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
   }
 
   function isBoolean(obj){
