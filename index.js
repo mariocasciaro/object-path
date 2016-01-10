@@ -275,5 +275,28 @@
     return del(obj, path);
   };
 
+  function list(obj, includeEmpty, path, pathList) {
+    path = path || '';
+    pathList = pathList || [];
+    for (var i in obj) {
+      if (_hasOwnProperty.call(obj, i)) {
+        var childPath = ((path && path + '.') || path) + i;
+        if (isObject(obj[i]) || isArray(obj[i])) {
+          if (includeEmpty) {
+            pathList.push(childPath);
+          }
+          list(obj[i], includeEmpty, childPath, pathList);
+        } else {
+          pathList.push(childPath);
+        }
+      }
+    }
+    return pathList;
+  }
+
+  objectPath.list = function(obj, includeEmpty) {
+    return list(obj, includeEmpty);
+  }
+
   return objectPath;
 });
