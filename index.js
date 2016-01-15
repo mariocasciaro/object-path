@@ -51,8 +51,8 @@
     return typeof obj === 'object' && toString(obj) === "[object Object]";
   }
 
-  function isArray(obj){
-    return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
+  var isArray = Array.isArray || function(obj){
+    return toStr.call(obj) === '[object Array]';
   }
 
   function isBoolean(obj){
