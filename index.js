@@ -181,6 +181,39 @@
     return set(obj, path, value, doNotReplace);
   };
 
+  objectPath.wildcardSet = function (obj, path, value, doNotReplace) {
+    if (path.indexOf('*') === -1) {
+      objectPath.set(obj, path, value, doNotReplace);
+    } else {
+      // Recursive set
+      var segments = path.split('.');
+      var wildcardPos = segments.indexOf('*');
+      var objectKey = segments.slice(0, wildcardPos).join('.');
+      var propertyKey = segments.slice(wildcardPos + 1).join('.');
+      var arrayList = objectPath.get(obj, objectKey);
+
+      for (var i in arrayList) {
+        if (_hasOwnProperty.call(arrayList, i)) {
+          if (isObject(arrayList[i])) {
+            if (propertyKey === '') {
+              if (!doNotReplace) {
+                // Case of replacing whole object
+                arrayList[i] = value;
+              }
+            } else {
+              objectPath.wildcardSet(arrayList[i], propertyKey, value, doNotReplace);
+            }
+          } else if (!doNotReplace) {
+            // Case of replacing primitive types
+            arrayList[i] = value;
+          }
+        }
+      }
+    }
+
+    return obj;
+  };
+
   objectPath.insert = function (obj, path, value, at){
     var arr = objectPath.get(obj, path);
     at = ~~at;

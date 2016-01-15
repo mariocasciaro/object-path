@@ -93,6 +93,25 @@ objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 objectPath.has(obj, "a.b"); // true
 objectPath.has(obj, ["a","d"]); // false
 
+//sets with wildcard
+var obj = {
+  a: {
+    b: { c: "a" },
+    c: { c: "a" },
+    d: { c: "a" }
+  }
+}
+objectPath.wildcardSet(obj, "a.*.c", "test");
+objectPath.get(obj, "a.b.c"); //returns "test"
+objectPath.get(obj, "a.c.c"); //returns "test"
+objectPath.get(obj, "a.d.c"); //returns "test"
+
+objectPath.wildcardSet(obj, "a.b.c", "test2");
+objectPath.get(obj, "a.b.c"); //returns "test2"
+//note: wildcardSet with path containing wildcard won't create intermediate object/arrays
+//otherwise it behaves just like set
+
+
 //bind object
 var model = objectPath({
   a: {

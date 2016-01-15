@@ -764,3 +764,197 @@ describe('bind object', function () {
   });
 
 });
+
+describe('wildcardSet', function () {
+  var val;
+
+  it('should set simple value', function () {
+    val = {};
+    val = objectPath.wildcardSet(val, 'test', '123');
+    expect(val).to.deep.equal({test: '123'});
+
+    val = {test:456};
+    val = objectPath.wildcardSet(val, 'test', 123);
+    expect(val).to.deep.equal({test: 123});
+
+    val = {test:456};
+    val = objectPath.wildcardSet(val, 'test', 123, true);
+    expect(val).to.deep.equal({test: 456});
+  });
+
+  it('should set simple value with nested path', function () {
+    val = {};
+    val = objectPath.wildcardSet(val, 'a.b.c.d.e.f.g', '123');
+    expect(val).to.deep.equal({'a':{'b':{'c':{'d':{'e':{'f':{'g':'123'}}}}}}});
+
+    val = {'a':{'b':{'c':{'d':{'e':{'f':{'g':456}}}}}}};
+    val = objectPath.wildcardSet(val, 'a.b.c.d.e.f.g', 123);
+    expect(val).to.deep.equal({'a':{'b':{'c':{'d':{'e':{'f':{'g':123}}}}}}});
+
+    val = {'a':{'b':{'c':{'d':{'e':{'f':{'g':456}}}}}}};
+    val = objectPath.wildcardSet(val, 'a.b.c.d.e.f.g', 123 , true);
+    expect(val).to.deep.equal({'a':{'b':{'c':{'d':{'e':{'f':{'g':456}}}}}}});
+  });
+
+  it('should set with value with wildcard path', function () {
+    val = {a:[{},{},{},{}]};
+    val = objectPath.wildcardSet(val, 'a.*.b', '123');
+    expect(val).to.deep.equal({a:[{b:'123'},{b:'123'},{b:'123'},{b:'123'}]});
+
+    val = {a:[{b:456},{b:456},{b:456},{b:456}]};
+    val = objectPath.wildcardSet(val, 'a.*.b', 123);
+    expect(val).to.deep.equal({a:[{b:123},{b:123},{b:123},{b:123}]});
+
+    val = {a:[{b:456},{b:456},{b:456},{b:456}]};
+    val = objectPath.wildcardSet(val, 'a.*.b', 123, true);
+    expect(val).to.deep.equal({a:[{b:456},{b:456},{b:456},{b:456}]});
+
+    val = {
+      a: {
+        b: { c: "a" },
+        c: { c: "a" },
+        d: { c: "a" }
+      }
+    };
+    objectPath.wildcardSet(val, 'a.*.c', 'test');
+    expect(objectPath.get(val, 'a.b.c')).to.equal('test');
+    expect(objectPath.get(val, 'a.c.c')).to.equal('test');
+    expect(objectPath.get(val, 'a.d.c')).to.equal('test');
+
+    objectPath.wildcardSet(val, 'a.b.c', 'test2');
+    expect(objectPath.get(val, 'a.b.c')).to.equal('test2');
+  });
+
+  it('should set with value with multiple wildcard path', function () {
+    val = {a:[{b:[{},{}]},{b:[{},{}]}]};
+    val = objectPath.wildcardSet(val, 'a.*.b.*.c', '123');
+    expect(val).to.deep.equal({'a':[{'b':[{'c':'123'},{'c':'123'}]},{'b':[{'c':'123'},{'c':'123'}]}]});
+
+    val = {'a':[{'b':[{'c':456},{'c':456}]},{'b':[{'c':456},{'c':456}]}]};
+    val = objectPath.wildcardSet(val, 'a.*.b.*.c', 123);
+    expect(val).to.deep.equal({'a':[{'b':[{'c':123},{'c':123}]},{'b':[{'c':123},{'c':123}]}]});
+
+    val = {'a':[{'b':[{'c':456},{'c':456}]},{'b':[{'c':456},{'c':456}]}]};
+    val = objectPath.wildcardSet(val, 'a.*.b.*.c', 123, true);
+    expect(val).to.deep.equal({'a':[{'b':[{'c':456},{'c':456}]},{'b':[{'c':456},{'c':456}]}]});
+
+    val = {
+      a: {
+        x: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}},
+        y: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}},
+        z: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}}
+      }
+    };
+    val = objectPath.wildcardSet(val, 'a.*.b.*.*.c', 123);
+    expect(val).to.deep.equal({
+      a: {
+        x: {b: {x: {x: {c:123}, y: {c:123}, z: {c:123}}, y: {x: {c:123}, y: {c:123}, z: {c:123}}, z: {x: {c:123}, y: {c:123}, z: {c:123}}}},
+        y: {b: {x: {x: {c:123}, y: {c:123}, z: {c:123}}, y: {x: {c:123}, y: {c:123}, z: {c:123}}, z: {x: {c:123}, y: {c:123}, z: {c:123}}}},
+        z: {b: {x: {x: {c:123}, y: {c:123}, z: {c:123}}, y: {x: {c:123}, y: {c:123}, z: {c:123}}, z: {x: {c:123}, y: {c:123}, z: {c:123}}}}
+      }
+    });
+    val = {
+      a: {
+        x: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}},
+        y: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}},
+        z: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}}
+      }
+    };
+    val = objectPath.wildcardSet(val, 'a.*.b.*.*.c', 123, true);
+    expect(val).to.deep.equal({
+      a: {
+        x: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}},
+        y: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}},
+        z: {b: {x: {x: {c:456}, y: {c:456}, z: {c:456}}, y: {x: {c:456}, y: {c:456}, z: {c:456}}, z: {x: {c:456}, y: {c:456}, z: {c:456}}}}
+      }
+    });
+  });
+
+  it('should set with only wildcard', function () {
+    val = {a:456,b:456,c:456};
+    val = objectPath.wildcardSet(val, '*', 123);
+    expect(val).to.deep.equal({a:123,b:123,c:123});
+
+    val = {a:{},b:{},c:{}};
+    val = objectPath.wildcardSet(val, '*', 123);
+    expect(val).to.deep.equal({a:123,b:123,c:123});
+
+    val = {a:456,b:456,c:456};
+    val = objectPath.wildcardSet(val, '*', 123, true);
+    expect(val).to.deep.equal({a:456,b:456,c:456});
+
+    val = [456,456,456];
+    val = objectPath.wildcardSet(val, '*', 123);
+    expect(val).to.deep.equal([123,123,123]);
+
+    val = [[],[],[]];
+    val = objectPath.wildcardSet(val, '*', 123);
+    expect(val).to.deep.equal([123,123,123]);
+
+    val = [{},{},{}];
+    val = objectPath.wildcardSet(val, '*', 123);
+    expect(val).to.deep.equal([123,123,123]);
+
+    val = [456,456,456];
+    val = objectPath.wildcardSet(val, '*', 123, true);
+    expect(val).to.deep.equal([456,456,456]);
+
+    val = {a:{d:456},b:{e:456},c:{f:456}};
+    val = objectPath.wildcardSet(val, '*.*', 123);
+    expect(val).to.deep.equal({a:{d:123},b:{e:123},c:{f:123}});
+
+    val = {a:{d:456},b:{e:456},c:{f:456}};
+    val = objectPath.wildcardSet(val, '*.*', 123, true);
+    expect(val).to.deep.equal({a:{d:456},b:{e:456},c:{f:456}});
+
+    val = {a:{d:{}},b:{e:{}},c:{f:{}}};
+    val = objectPath.wildcardSet(val, '*.*', 123);
+    expect(val).to.deep.equal({a:{d:123},b:{e:123},c:{f:123}});
+
+    val = {a:{d:{}},b:{e:{}},c:{f:{}}};
+    val = objectPath.wildcardSet(val, '*.*', 123, true);
+    expect(val).to.deep.equal({a:{d:{}},b:{e:{}},c:{f:{}}});
+  });
+
+  it('should set with path start with wildcard', function () {
+    val = {a:{},b:{},c:{}};
+    val = objectPath.wildcardSet(val, '*.e', 123);
+    expect(val).to.deep.equal({a:{e:123},b:{e:123},c:{e:123}});
+
+    val = {a:{},b:{},c:{}};
+    val = objectPath.wildcardSet(val, '*.e.f.g', 123);
+    expect(val).to.deep.equal({a:{e:{f:{g:123}}},b:{e:{f:{g:123}}},c:{e:{f:{g:123}}}});
+  });
+
+  it('should set with path ends with wildcard', function () {
+    val = {a:{b:{},c:{},d:{}},b:{b:{},c:{},d:{}}};
+    val = objectPath.wildcardSet(val, 'a.*', 123);
+    expect(val).to.deep.equal({a:{b:123,c:123,d:123},b:{b:{},c:{},d:{}}});
+
+    val = {a:{b:{c:{d:{},e:{},f:{}}}},b:{b:{c:{d:{},e:{},f:{}}}},c:{b:{c:{d:{},e:{},f:{}}}}};
+    val = objectPath.wildcardSet(val, 'a.b.c.*', 123);
+    expect(val).to.deep.equal({a:{b:{c:{d:123,e:123,f:123}}},b:{b:{c:{d:{},e:{},f:{}}}},c:{b:{c:{d:{},e:{},f:{}}}}});
+  });
+
+  it('should not create path', function () {
+    val = {};
+    val = objectPath.wildcardSet(val, '*', 123);
+    expect(val).to.deep.equal({});
+
+    val = {};
+    val = objectPath.wildcardSet(val, 'a.*', 123);
+    expect(val).to.deep.equal({});
+
+    val = {a:{}};
+    val = objectPath.wildcardSet(val, 'a.*', 123);
+    expect(val).to.deep.equal({a:{}});
+
+    val = {};
+    val = objectPath.wildcardSet(val, 'a.*.c', 123);
+    expect(val).to.deep.equal({});
+
+    val = {};
+    val = objectPath.wildcardSet(val, 'a.b.c.*', 123);
+    expect(val).to.deep.equal({});
+  });
+});
