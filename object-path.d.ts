@@ -1,22 +1,16 @@
 declare namespace ObjectPath {
 
-  export interface Options {
-    /**
-     * Treat numbers in string paths as arrays when setting properties
-     */
-    numberAsArray?: boolean;
-    /**
-     * When set to false, can access non-enumerables
-     */
-    ownPropertiesOnly?: boolean;
-  }
-
   export interface PathTypesAny {
     [index: string]: any;
   }
-  export type PathTypes = (Array<string | number | symbol>) | (number | string  | symbol | PathTypesAny);
-  export type Extender = (base: ExtenderBase, options: Options) => Object;
-  export const defaultOptions: Options;
+  export type PathTypes = (Array<string | number | symbol>) | (number | string | symbol | PathTypesAny);
+  export type Extender = (base: ExtenderBase) => Object;
+
+  export class ObjectPathError implements ReferenceError {
+    message: string;
+    name: string;
+    constructor(message: string);
+  }
 
   export function toString(type: any): string;
   export function isNumber(value: any): value is number;
@@ -37,11 +31,12 @@ declare namespace ObjectPath {
   export function push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: Array<any>, ownPropertiesOnly?: boolean, numberAsArray?: boolean): void;
   export function coalesce<O extends ObjectPath.O, T>(obj: O, paths: ObjectPath.PathTypes[], defaultValue: T, ownPropertiesOnly?: boolean): T;
   export function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue: T, ownPropertiesOnly?: boolean): T;
-  export function bind<O extends ObjectPath.O>(obj: O, from?: ObjectPath.Class): ObjectPath.Bound<O>;
 
-  export var instance: Class;
+  export interface Wrapper {
 
-  export interface O extends Object, Array<any> {
+  }
+
+  export interface O extends Object {
     [index: string]: any;
   }
 
@@ -70,25 +65,6 @@ declare namespace ObjectPath {
     get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue: T, ownPropertiesOnly?: boolean): T;
   }
 
-  export interface ObjectPath extends Base {
-    set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, doNotReplace: boolean): any;
-    ensureExists<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any): any;
-    get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue?: T): T;
-    del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes): any;
-    option(options: ObjectPath.Options): ObjectPath.Class;
-    extend(ctor: ObjectPath.Extender): ObjectPath.Class;
-    has<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes): boolean;
-    coalesce<O extends ObjectPath.O>(obj: O, paths: ObjectPath.PathTypes[], defaultValue: any): any;
-    push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: any[] | any): ObjectPath.Class;
-    insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at: number): ObjectPath.Class;
-    empty<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes): any;
-    bind<O extends ObjectPath.O>(obj: O): ObjectPath.Bound<O>;
-  }
-
-  export interface Class extends ObjectPath {
-    options: Options;
-  }
-
   export interface Bound<O extends Object> {
     set?(path: PathTypes, value: any, doNotReplace: boolean): any;
     ensureExists?(path: PathTypes, value: any): any;
@@ -104,8 +80,8 @@ declare namespace ObjectPath {
 }
 
 declare module 'object-path' {
-  export = ObjectPath;
+  var objectPath: ObjectPath.Wrapper;
+  export = objectPath;
 }
 
-declare var ObjectPathBase: typeof ObjectPath;
-declare var objectPath: ObjectPath.Class;
+declare var objectPath: ObjectPath.Wrapper;

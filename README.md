@@ -19,50 +19,14 @@ npm install object-path --save
 bower install object-path --save
 ```
 
-## Breaking changes
+## Changelog
 
-#### Upgrading to 1.x from 0.x
-
-* `objectPath(obj)` now needs to be called as `objectPath.bind(obj)`
-
-* Non-existing array paths (denoted by numbers in path, such as 'a.0.b') will be created
-as array unless a new instance is created with `new objectPath.Class({ numberAsArray: false })`
-
-* If you were adding methods directly to the global object `objectPath`, it's advised to
-use `objectPath.instance.extend(function(base, options){ })` now
-
-* By default, non-own properties won't be accessible, you must create a new instance
- using `new objectPath.Class({ ownPropertiesOnly: false })` so it can access any type of properties,
- including from Proxy and inherited classes, or change the instance option by using `objectPath.instance.option({ ownPropertiesOnly: false })`
-
-* The `objectPath` global in the **browser** is now an instance of the ObjectPath 'class', that
-you can now derive in your code, as in:
-
-```js
-// in ES5
-function MyClass(options) {
-  ObjectPathModule.Class.call(this, options);
-}
-MyClass.prototype = Object.create(ObjectPathModule.Class.prototype);
-```
-
-```es6
-// in ES6
-class MyClass extends ObjectPathModule.Class {
-  constructor(options) {
-    super(options);
-  }
-}
-```
-
-* The functions `get`, `set`, `del`, `push`, etc that you get from `var objectPath = require('object-path')`
-behave more or like the same the version 0.x. If you want the class instance, use `var objectPath = require('object-path').instance;`.
-The same instance will be available in all your files, including any plugins you use to extend it.
+See [CHANGELOG.md](CHANGELOG.md) for info
 
 ## Polyfills
 
 Depending on the target engines you are using objectPath on, you'll need a
-polyfill for `Array.reduce`
+polyfill for `Array.reduce` and `Array.map`
 
 ## Usage
 
@@ -81,13 +45,7 @@ var obj = {
 };
 
 // this instance will be the same in any other files you require it, it's the preferable way of using objectPath
-var objectPath = require("object-path").instance;
-
-// this objectPath instance will only be available in this file context
-// var objectPath = new require('object-path').Class();
-
-// you still have access to old functions get, set, del, push, etc, as their are standalone functions
-// var objectPath = require('object-path');
+var objectPath = require("object-path");
 
 //get deep property
 objectPath.get(obj, "a.b");  //returns "d"
@@ -123,7 +81,8 @@ objectPath.set(obj, "a.j.0.f", "m");
 objectPath.insert(obj, "a.c", "m", 1); // obj.a.c = ["e", "m", "f"]
 
 //push into arrays (and create intermediate objects/arrays)
-objectPath.push(obj, "a.k", "o");
+objectPath.push(obj, "a.k", ["o"]); // obj.a.k = ["o"];
+objectPath.push(obj, "a.k", ["p","q"]); // obj.a.k = ["o","p","q"];
 
 //ensure a path exists (if it doesn't, set the default value you provide)
 objectPath.ensureExists(obj, "a.k.1", "DEFAULT");
@@ -155,14 +114,12 @@ model.has("a.b"); // false
 
 ## Extending with plugins
 
-**object-path** can be extended using plugins per instance or per global instance (`var objectPath = require('objectPath').instance`
-in Node, and `objectPath` global in browser).
-Those plugins can add new functionality or modify existing methods.
+**object-path** can be extended using plugins. Those plugins can add new functionality or modify existing methods.
 
 To extend `objectPath`, you should use:
 
 ```js
-objectPath.extend(function(baseFunctions, instanceOptions){
+objectPath.extend(function(baseFunctions){
   return {
     tryGet: function(obj, path) {
       if (!baseFunctions.has(obj, path)) {
@@ -174,17 +131,18 @@ objectPath.extend(function(baseFunctions, instanceOptions){
 });
 ```
 
-The returned object will be merged on the current instance. From the example, you'll be able to call
+The returned object will be merged on the current objectPath singleton. From the example, you'll be able to call
 `objectPath.tryGet(obj, 'some.path')` after the call to extend. The first `baseFunctions` parameter
 contains all the original internal functions, that behave exactly the same even
 if you overwrite the `get`, `set`, `push`, etc methods.
 
 ```js
-objectPath.extend(function(baseFunctions, instanceOptions){
+objectPath.extend(function(baseFunctions){
   return {
     get: function(obj, path, default, cb) {
       // do something
       cb(baseFunctions.get(obj, path, default));
+      // doing objectPath.get instead of baseFunctions.get will create an infinite loop
     }
   }
 });
@@ -229,7 +187,7 @@ Your plugin should be defined as:
 
 ```js
 // in node
-module.exports = function(baseFunctions, options) {
+module.exports = function(baseFunctions) {
   return {
     yourFunction: function() {
     }
@@ -239,7 +197,7 @@ module.exports = function(baseFunctions, options) {
 
 ```js
 // in browser
-ObjectPathModule.instance.extend(function(baseFunctions, options) {
+objectPath.extend(function(baseFunctions) {
   return {
     yourFunction: function() {
     }
@@ -249,7 +207,7 @@ ObjectPathModule.instance.extend(function(baseFunctions, options) {
 
 ```es6
 // in ES2015+
-exports default function(baseFunctions, options) {
+exports default function(baseFunctions) {
   return {
     yourFunction: function() {
 
