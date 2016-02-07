@@ -22,16 +22,16 @@
     }
   ],
   "devDependencies": {
-    "chai": "^3.4.1",
-    "coveralls": "^2.11.2",
-    "esformatter": "^0.8.1",
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.6",
+    "esformatter": "^0.9.0",
     "esformatter-braces": "^1.2.1",
     "esformatter-collapse-objects": "^0.5.1",
-    "esformatter-quotes": "^1.0.0",
+    "esformatter-quotes": "^1.0.3",
     "esformatter-remove-trailing-commas": "^1.0.1",
-    "esformatter-semicolons": "^1.0.3",
-    "istanbul": "^0.4.1",
-    "mocha": "^2.3.4",
+    "esformatter-semicolons": "^1.1.2",
+    "istanbul": "^0.4.2",
+    "mocha": "^2.4.5",
     "mocha-lcov-reporter": "^1.0.0"
   },
   "scripts": {
@@ -58,5 +58,5 @@
     "key"
   ],
   "license": "MIT",
-  "typings": "./index.d.ts"
+  "typings": "./object-path.d.ts"
 }

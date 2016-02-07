@@ -347,7 +347,7 @@ function coalesce<O extends ObjectPath.O, T>(obj: O, paths: ObjectPath.PathTypes
   return defaultValue;
 }
 
-function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue: T, noThrow: boolean = false, ownPropertiesOnly: boolean = true): T {
+function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue?: T, noThrow: boolean = false, ownPropertiesOnly: boolean = true): T {
   if (isEmpty(obj, ownPropertiesOnly)) {
     if (noThrow === true) {
       return defaultValue;
@@ -384,7 +384,7 @@ function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defa
 
 var skipProps: any = {
   bind: true,
-  extend: true
+  ObjectPathError: true
 };
 
 var objectPath: ObjectPath.Wrapper = {
@@ -408,9 +408,10 @@ function bind<O extends ObjectPath.O>(obj: O, noThrow: boolean = false, ownPrope
   }
 
   var funcNames: any = [];
+  var self: typeof objectPath = this;
 
-  for (var x in objectPath) {
-    if (!(x in skipProps) && typeof (<any>objectPath)[x] === 'function') {
+  for (var x in self) {
+    if (!(x in skipProps) && typeof (<any>self)[x] === 'function') {
       funcNames.push(x);
     }
   }
@@ -420,7 +421,7 @@ function bind<O extends ObjectPath.O>(obj: O, noThrow: boolean = false, ownPrope
     proxy[prop] = function() {
       var args = [obj]
       Array.prototype.push.apply(args, arguments)
-      return (<any>objectPath)[prop].apply(objectPath, args)
+      return (<any>self)[prop].apply(self, args)
     }
     return proxy
   }, {})
@@ -445,13 +446,18 @@ function extend<T>(ctor: ObjectPath.Extender<T>, noConflict: boolean = false): O
     isNumber,
     isObject,
     isString,
-    push
+    push,
+    extend,
+    bind,
+    ObjectPathError
   };
 
+  var self: typeof objectPath = this;
+
   if (noConflict === true) {
-    return merge<{}, ObjectPath.Wrapper>({}, objectPath, ctor(base));
+    return merge<{}, ObjectPath.Wrapper>({}, self, ctor(base));
   } else {
-    return merge(objectPath, ctor(base));
+    return merge(self, ctor(base));
   }
 }
 
