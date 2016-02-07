@@ -1,12 +1,17 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
+		"module": "umd",
 		"noImplicitAny": true,
 		"noResolve": true,
-		"target": "ES5"
+    "declaration": true,
+    "removeComments": false,
+    "newLine": "LF",
+		"target": "es5"
 	},
 	"files": [
 		"object-path.d.ts",
+    "symbol.d.ts",
+    "test-ts.ts",
 		"index.ts"
 	]
 }

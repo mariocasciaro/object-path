@@ -1,426 +1,464 @@
-//(function (root, factory){
-//    'use strict';
-//
-//    /* istanbul ignore next */
-//    if (typeof module === 'object' && typeof module.exports === 'object') {
-//        module.exports = factory();
-//    } else if (typeof define === 'function' && define.amd) {
-//    // AMD. Register as an anonymous module.
-//        define([], factory);
-//    } else {
-//    // Browser globals
-//        root.objectPath = factory();
-//    }
-//})(this, function(){
+'use strict';
 
-module ObjectPath {
-  'use strict';
-  
-  var
-    toStr = Object.prototype.toString,
-    _hasOwnProperty = Object.prototype.hasOwnProperty;
-  
-  const defaultOptions: ObjectPathModule.IObjectPathOptions = {
-    numberAsArray: true,
-    ownPropertiesOnly: true
-  };
-  
-  function merge(base: any, ...args: any[]): any {
-    if (!isObject(base)) {
-      base = {};
+var _hasOwnProperty = Object.prototype.hasOwnProperty
+var _hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator !== 'undefined'
+
+class ObjectPathError implements ReferenceError {
+  name = 'ObjectPathError';
+  stack: string;
+
+  constructor(public message: string) {
+    ReferenceError.call(this, message);
+
+    /* istanbul ignore next: no need to test */
+    if (Error.captureStackTrace) { // v8
+      Error.captureStackTrace(this, this.constructor);
     }
-    
-    for (let arg of args) {
-      if (isObject(arg)) {
-        for (let option in arg) {
-          base[option] = arg[option];
-        }
+
+    /* istanbul ignore next: no need to test */
+    if (!this.stack) { // non-old IE, Firefox
+      this.stack = (new Error).stack;
+    }
+  }
+
+}
+
+ObjectPathError.prototype = Object.create(ReferenceError.prototype, {
+  constructor: {
+    value: ObjectPathError
+  }
+});
+
+function isNumber(value: any): value is number {
+  return typeof value === 'number' && value.constructor === Number;
+}
+
+function isString(obj: any): obj is string {
+  return typeof obj === 'string' && obj.constructor === String;
+}
+
+function isObject(obj: any): obj is Object {
+  return typeof obj === 'object' && obj !== null && obj.constructor !== Array;
+}
+
+function isSymbol(obj: any): obj is symbol {
+  return _hasSymbols && typeof obj === 'symbol' && obj.constructor === Symbol;
+}
+
+function isArray(obj: any): obj is any[] {
+  return typeof obj === 'object' && obj !== null && obj.constructor === Array;
+}
+
+function isBoolean(obj: any): obj is boolean {
+  return typeof obj === 'boolean' && obj.constructor === Boolean;
+}
+
+function merge<T extends any, U>(base: T, ...args: any[]): T & U {
+  if (!isObject(base)) {
+    base = <T>{};
+  }
+
+  for (var arg of args) {
+    if (isObject(arg)) {
+      for (var option in arg) {
+        base[option] = arg[option];
       }
     }
-    
-    return base;
   }
-  
-  function isEmpty(value: any, ownPropertiesOnly: boolean): boolean {
-    // String, boolean, number that is either '', false or 0 respectivelly or null and undefined
-    if (!value) {
-      return true;
+
+  return <T & U>base;
+}
+
+function isEmpty(value: string|boolean|symbol|number|Array<any>|Object, ownPropertiesOnly: boolean = true): boolean {
+  // String, boolean, number that is either '', false respectivelly or null and undefined
+  // 0 is a valid "path", as it can refer to either the key of an object, or an array index
+  if (!value) {
+    if (value === 0) {
+      return false;
     }
-    
-    if (isArray(value) && value.length === 0) {
-      return true;
-    } else if (!isString(value)) {
-      for (let i in value) {
-        if (ownPropertiesOnly === true){
-          // Must have own property to be considered non-empty
-          if (_hasOwnProperty.call(value, i)) {
-            return false;
-          }
+    return true;
+  } else if (isNumber(value)) {
+    return false;
+  }
+
+  // Preemptively return as soon as we get something for performance reasons
+  if (isArray(value) && value.length === 0) {
+    return true;
+  } else if (isSymbol(value)) {
+    return false;
+  } else if (!isString(value)) {
+    for (var i in value) {
+      if (ownPropertiesOnly === true) {
+        // Must have own property to be considered non-empty
+        if (_hasOwnProperty.call(value, i)) {
+          return false;
+        }
+      } else {
+        // Since it has at least one member, assume non-empty, return immediately
+        return false;
+      }
+    }
+
+    // symbols can't be walked with for in
+    /* istanbul ignore else */
+    if (_hasSymbols) {
+      if (Object.getOwnPropertySymbols(value).length) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+function getKey(key: string | symbol): number | string | symbol {
+  if (isSymbol(key)) {
+    return key;
+  }
+
+  // Perf: http://jsperf.com/tostring-vs-typecast-vs
+
+  if (('' + ~~<any>key) === <any>key) {
+    // Return the integer if it's a real number
+    return ~~(<any>key);
+  }
+
+  return key;
+}
+
+function ensureExists<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, noThrow: boolean = false, ownPropertiesOnly: boolean = true): any {
+  return set(obj, path, value, true, noThrow, ownPropertiesOnly);
+}
+
+function set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, doNotReplace: boolean = false, noThrow: boolean = false, ownPropertiesOnly: boolean = true): any {
+  if (typeof obj !== 'object' && isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided object is empty');
+  }
+
+  if (isNumber(path) || isSymbol(path)) {
+    path = [path];
+  }
+
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
+  if (isString(path)) {
+    path = (<string>path).split('.');
+    return set(obj, (<Array<string>>path).map(getKey), value, doNotReplace, noThrow, ownPropertiesOnly);
+  }
+
+
+  var currentPath: any = (<Array<string>>path)[0];
+
+  if ((<Array<string>>path).length === 1) {
+    var oldVal = (<any>obj)[currentPath];
+    if (oldVal === void 0 || !doNotReplace) {
+      obj[currentPath] = value;
+    }
+    return oldVal;
+  }
+
+  if (obj[currentPath] === void 0) {
+    if (isNumber((<ObjectPath.PathTypes[]>path)[1])) {
+      obj[currentPath] = [];
+    } else {
+      obj[currentPath] = {};
+    }
+  }
+
+  return set(obj[currentPath], (<ObjectPath.PathTypes[]>path).slice(1), value, doNotReplace, true, ownPropertiesOnly);
+}
+
+function del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, noThrow: boolean = false, ownPropertiesOnly: boolean = true): O {
+  if (isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided object is empty');
+  }
+
+  if (isNumber(path) || isSymbol(path)) {
+    path = [path];
+  }
+
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
+  if (isString(path)) {
+    return del(obj, path.split('.'), noThrow, ownPropertiesOnly);
+  }
+
+
+  var currentPath = getKey((<any>path)[0]);
+  var oldVal = obj[currentPath];
+
+  if ((<ObjectPath.PathTypes[]>path).length === 1) {
+    if (oldVal !== void 0) {
+      if (isNumber(currentPath) && isArray(obj)) {
+        (<any>obj).splice(currentPath, 1);
+      } else {
+        delete obj[currentPath];
+      }
+    }
+  } else if (obj[currentPath] !== void 0) {
+    return del(obj[currentPath], (<ObjectPath.PathTypes[]>path).slice(1), true, ownPropertiesOnly);
+  }
+
+  return obj;
+}
+
+function has<O extends ObjectPath.O>(obj: O, path:  ObjectPath.PathTypes, noThrow: boolean = false, ownPropertiesOnly: boolean = true): boolean {
+  if (isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return false;
+    }
+    throw new ObjectPathError('provided object is empty');
+  }
+
+  if (isNumber(path) || isSymbol(path)) {
+    path = [path];
+  }
+
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return false;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
+  if (isString(path)) {
+    path = (<string>path).split('.');
+  }
+
+  for (var i = 0; i < (<ObjectPath.PathTypes[]>path).length; i++) {
+    var j = (<any>path)[i];
+
+    if (isObject(obj) || isArray(obj)) {
+      if (ownPropertiesOnly) {
+        if (_hasOwnProperty.call(obj, j)) {
+          obj = <any>obj[j];
         } else {
-          // Since it has at least one member, assume non-empty, return immediately
+          return false;
+        }
+      } else {
+        if (j in obj) {
+          obj = obj[j];
+        } else {
           return false;
         }
       }
-      return true;
-    }
-    return false;
-  }
-  
-  function toString(type: any): string {
-    return toStr.call(type);
-  }
-  
-  function isNumber(value: any): boolean {
-    return typeof value === 'number' || toString(value) === "[object Number]";
-  }
-  
-  function isString(obj: any): boolean {
-    return typeof obj === 'string' || toString(obj) === "[object String]";
-  }
-  
-  function isObject(obj: any): boolean {
-    return typeof obj === 'object' && toString(obj) === "[object Object]";
-  }
-  
-  function isArray(obj: any): boolean {
-    return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
-  }
-  
-  function isBoolean(obj: any): boolean {
-    return typeof obj === 'boolean' || toString(obj) === '[object Boolean]';
-  }
-  
-  function getKey(key: string): number|string {
-    var intKey = parseInt(key, 10);
-    
-    if (intKey.toString() === key) {
-      // Return the integer if it's a real number
-      return intKey;
-    }
-    
-    return key;
-  }
-  
-  function ensureExists(obj: any, path: any, value: any, options: ObjectPathModule.IObjectPathOptions): any {
-    return set(obj, path, value, true, options);
-  }
-  
-  function set(obj: any, path: any, value: any, doNotReplace: boolean, options: ObjectPathModule.IObjectPathOptions): any {
-    if (isNumber(path)) {
-      path = [path];
-    }
-    
-    if (isEmpty(path, options.ownPropertiesOnly)) {
-      return obj;
-    }
-    
-    if (isString(path)) {
-      path = path.split('.');
-      return set(obj, (!options.numberAsArray ? path : path.map(getKey)), value, doNotReplace, options);
-    }
-    
-    var currentPath = path[0];
-  
-    if (path.length === 1) {
-      var oldVal = obj[currentPath];
-      if (oldVal === void 0 || !doNotReplace) {
-        obj[currentPath] = value;
-      }
-      return oldVal;
-    }
-  
-    if (obj[currentPath] === void 0) {
-      if(isNumber(path[1])) {
-        // Check if we assume an array per provided options, numberAsArray
-        obj[currentPath] = [];
-      } else {
-        obj[currentPath] = {};
-      }
-    }
-  
-    return set(obj[currentPath], path.slice(1), value, doNotReplace, options);
-  }
-  
-  function del(obj: any, path: any, ownPropertiesOnly: boolean): any {
-    if (isNumber(path)) {
-      path = [path];
-    }
-  
-    if (isEmpty(obj, ownPropertiesOnly)) {
-      return void 0;
-    }
-  
-    if (isEmpty(path, ownPropertiesOnly)) {
-      return obj;
-    }
-    
-    if(isString(path)) {
-      return del(obj, path.split('.'), ownPropertiesOnly);
-    }
-  
-    var currentPath = getKey(path[0]);
-    var oldVal = obj[currentPath];
-  
-    if(path.length === 1) {
-      if (oldVal !== void 0) {
-        if (isArray(obj)) {
-          obj.splice(currentPath, 1);
-        } else {
-          delete obj[currentPath];
-        }
-      }
     } else {
-      if (obj[currentPath] !== void 0) {
-        return del(obj[currentPath], path.slice(1), ownPropertiesOnly);
-      }
-    }
-  
-    return obj;
-  }
-  
-  function has(obj: any, path: any, ownPropertiesOnly: boolean): boolean {
-    if (isEmpty(obj, ownPropertiesOnly)) {
       return false;
     }
-  
-    if (isNumber(path)) {
-      path = [path];
-    } else if (isString(path)) {
-      path = path.split('.');
-    }
-  
-    if (isEmpty(path, ownPropertiesOnly) || path.length === 0) {
-      return false;
-    }
-  
-    for (var i = 0; i < path.length; i++) {
-      var j = path[i];
-      
-      if (isObject(obj) || isArray(obj)) {
-        if (ownPropertiesOnly) {
-          if (_hasOwnProperty.call(obj, j)) {
-            obj = obj[j];
-          } else {
-            return false;
-          }
-        } else {
-          if (j in obj) {
-            obj = obj[j];
-          } else {
-            return false;
-          }
-        }
-      } else {
-        return false;
-      }
-      
-    }
-  
-    return true;
+
   }
-  
-  function insert(obj: any, path: any, value: any, at: number, options: ObjectPathModule.IObjectPathOptions): void {
-    var arr = get<any[]>(obj, path, void 0, options.ownPropertiesOnly);
-    at = ~~at;
-    if (!isArray(arr)) {
-      arr = [];
-      set(obj, path, arr, false, options);
-    }
-    arr.splice(at, 0, value);
+
+  return true;
+}
+
+function insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at: number = 0, noThrow: boolean = false, ownPropertiesOnly: boolean = true): void {
+  var arr = get(obj, path, void 0, noThrow, ownPropertiesOnly);
+  at = ~~at;
+  if (!isArray(arr)) {
+    arr = [];
+    set(obj, path, arr, false, noThrow, ownPropertiesOnly);
   }
-  
-  function empty(obj: any, path: any, options: ObjectPathModule.IObjectPathOptions): any {
-    if (isEmpty(path, options.ownPropertiesOnly)) {
-      return obj;
-    }
-    if (isEmpty(obj, options.ownPropertiesOnly)) {
-      return void 0;
-    }
-  
-    var value: any;
-    
-    if (!(value = get(obj, path, void 0, options.ownPropertiesOnly))) {
-      return obj;
-    }
-  
-    if (isString(value)) {
-      return set(obj, path, '', false, options);
-    } else if (isBoolean(value)) {
-      return set(obj, path, false, false, options);
-    } else if (isNumber(value)) {
-      return set(obj, path, 0, false, options);
-    } else if (isArray(value)) {
-      value.length = 0;
-    } else if (isObject(value)) {
-      for (let i in value) {
+  arr.splice(at, 0, value);
+}
+
+function empty<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, noThrow: boolean = false, ownPropertiesOnly: boolean = true): any {
+  var value: any = get(obj, path, Number.NaN, noThrow, ownPropertiesOnly);
+
+  if (value !== value) {
+    return void 0;
+  }
+
+  if (isString(value)) {
+    return set(obj, path, '', false, noThrow, ownPropertiesOnly);
+  } else if (isBoolean(value)) {
+    return set(obj, path, false, false, noThrow, ownPropertiesOnly);
+  } else if (isNumber(value)) {
+    return set(obj, path, 0, false, noThrow, ownPropertiesOnly);
+  } else if (isArray(value)) {
+    value.length = 0;
+  } else if (isObject(value)) {
+    for (var i in value) {
+      if (ownPropertiesOnly === true) {
         if (_hasOwnProperty.call(value, i)) {
           delete value[i];
         }
-      }
-    } else {
-      return set(obj, path, null, false, options);
-    }
-  }
-  
-  function push(obj: any, path: any, ...args: any[]): void {
-    var options: ObjectPathModule.IObjectPathOptions = args[args.length-1];
-    
-    if (isObject(options)) {
-      if (!('ownPropertiesOnly' in options)) {
-        options = defaultOptions;
       } else {
-        args.pop();
-      }
-    } else {
-      options = defaultOptions;
-    }
-    
-    var arr = get(obj, path, void 0, options.ownPropertiesOnly);
-    if (!isArray(arr)) {
-      arr = [];
-      set(obj, path, arr, false, options);
-    }
-  
-    arr.push.apply(arr, args);
-  }
-  
-  function coalesce<T>(obj: any, paths: any, defaultValue: T, ownPropertiesOnly: boolean): T {
-    var value: any;
-  
-    for (var i = 0, len = paths.length; i < len; i++) {
-      if ((value = get(obj, paths[i], void 0, ownPropertiesOnly)) !== void 0) {
-        return value;
+        delete value[i];
       }
     }
-  
-    return defaultValue;
-  }
-  
-  function get<T>(obj: any, path: any, defaultValue: T, ownPropertiesOnly: boolean): T {
-    if (isNumber(path)) {
-      path = [path];
-    }
-    
-    if (isEmpty(path, ownPropertiesOnly)) {
-      return obj;
-    }
-    
-    if (isEmpty(obj, ownPropertiesOnly)) {
-      return defaultValue;
-    }
-    
-    if (isString(path)) {
-      return get(obj, path.split('.'), defaultValue, ownPropertiesOnly);
-    }
-  
-    var currentPath = getKey(path[0]);
-  
-    if (path.length === 1) {
-      if (obj[currentPath] === void 0) {
-        return defaultValue;
-      }
-      return obj[currentPath];
-    }
-  
-    return get(obj[currentPath], path.slice(1), defaultValue, ownPropertiesOnly);
-  }
-  
-  export class Class implements ObjectPathModule.IObjectPath {
-    public options: ObjectPathModule.IObjectPathOptions;
-    public Class: typeof Class = Class;
-    
-    constructor(options?: ObjectPathModule.IObjectPathOptions) { 
-      this.options = merge({}, defaultOptions, options);
-    }
-    
-    public set(obj: Object, path: ObjectPathModule.IObjectPathPathTypes, value: any, doNotReplace: boolean) {
-      return set(obj, path, value, doNotReplace, this.options);
-    }
-    
-    public ensureExists(obj: Object, path: ObjectPathModule.IObjectPathPathTypes, value: any) {
-      return ensureExists(obj, path, value, this.options);
-    }
-  
-    public get<T>(obj: Object, path: ObjectPathModule.IObjectPathPathTypes, defaultValue?: T): T {
-      return get<T>(obj, path, defaultValue, this.options.ownPropertiesOnly);
-    }
-    
-    public del(obj: Object, path: ObjectPathModule.IObjectPathPathTypes) {
-      return del(obj, path, this.options.ownPropertiesOnly);
-    }
-    
-    public option(options: ObjectPathModule.IObjectPathOptions): ObjectPathModule.IObjectPath {
-      merge(this.options, options);
-      return this;
-    }
-    
-    public extend(ctor: ObjectPathModule.IObjectPathExtender): ObjectPathModule.IObjectPath {
-      var base: ObjectPathModule.IObjectPathExtenderBase = {
-        set,
-        merge,
-        coalesce,
-        del,
-        empty,
-        ensureExists,
-        get,
-        getKey,
-        has,
-        insert,
-        isArray,
-        isBoolean,
-        isEmpty,
-        isNumber,
-        isObject,
-        isString,
-        push
-      };
-      
-      merge(this, ctor(base, this.options));
-      
-      return this;
-    }
-    
-    public has(obj: Object, path: ObjectPathModule.IObjectPathPathTypes) {
-      return has(obj, path, this.options.ownPropertiesOnly);
-    }
-    
-    public coalesce(obj: Object, paths: ObjectPathModule.IObjectPathPathTypes[], defaultValue: any) {
-      return coalesce(obj, paths, defaultValue, this.options.ownPropertiesOnly);
-    }
-    
-    public push(obj: Object, path: ObjectPathModule.IObjectPathPathTypes, ...args: any[]): ObjectPathModule.IObjectPath {
-      push.apply(void 0, [obj, path].concat(args, this.options));
-      return this;
-    }
-    
-    public insert(obj: Object, path: ObjectPathModule.IObjectPathPathTypes, value: any, at: number): ObjectPathModule.IObjectPath {
-      insert(obj, path, value, at, this.options);
-      return this;
-    }
-    
-    public empty(obj: Object, path: ObjectPathModule.IObjectPathPathTypes) {
-      return empty(obj, path, this.options);
-    }
-    
-    public bind(obj: Object): ObjectPathModule.IObjectPathBound {
-      var self: any = this, out: any = {}; 
-      
-      return Object.getOwnPropertyNames(Class.prototype).reduce((proxy, prop) => {
-        if (typeof self[prop] === 'function' && !(prop in {'bind': true, 'extend': true, 'option': true})) {
-          /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
-          proxy[prop] = function(){ 
-            var args = [obj];
-            Array.prototype.push.apply(args, arguments);
-            return self[prop].apply(self, args);
-          }
+
+    /* istanbul ignore else */
+    if (_hasSymbols) {
+      var symbols: symbol[] = Object.getOwnPropertySymbols(value);
+      if (symbols.length) {
+        for (var x = 0; x < symbols.length; x++) {
+          delete value[symbols[x]];
         }
-    
-        return proxy;
-      }, out);
+      }
     }
+  } else {
+    return set(obj, path, null, false, noThrow, ownPropertiesOnly);
   }
-  
 }
 
-//    return new ObjectPath.Class();
-//});
+function push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: Array<any>, noThrow: boolean = false, ownPropertiesOnly: boolean = true): void {
+  if (!isArray(args)) {
+    // breaking change needs to be forcefully noticed
+    throw new ObjectPathError('3rd parameter "args" must be an array');
+  }
+
+  var arr: any[] = get(obj, path, void 0, noThrow, ownPropertiesOnly);
+  if (!isArray(arr)) {
+    arr = [];
+    set(obj, path, arr, false, noThrow, ownPropertiesOnly);
+  }
+
+  Array.prototype.push.apply(arr, args);
+}
+
+function coalesce<O extends ObjectPath.O, T>(obj: O, paths: ObjectPath.PathTypes[], defaultValue: T, noThrow: boolean = false, ownPropertiesOnly: boolean = true): T {
+  var value: any;
+
+  for (var i = 0, len = paths.length; i < len; i++) {
+    value = get(obj, paths[i], Number.NaN, noThrow, ownPropertiesOnly);
+
+    // looks silly but NaN is never equal to itself, it's a good unique value
+    if (value === value) {
+      return value;
+    }
+  }
+
+  return defaultValue;
+}
+
+function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defaultValue?: T, noThrow: boolean = false, ownPropertiesOnly: boolean = true): T {
+  if (isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return defaultValue;
+    }
+    throw new ObjectPathError('provided object is empty');
+  }
+
+  if (isNumber(path) || isSymbol(path)) {
+    path = [path];
+  }
+
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return defaultValue;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
+  if (isString(path)) {
+    return get(obj, path.split('.'), defaultValue, noThrow, ownPropertiesOnly);
+  }
+
+  var currentPath = getKey((<any>path)[0]);
+
+  if ((<ObjectPath.PathTypes[]>path).length === 1) {
+    if (obj[currentPath] === void 0) {
+      return defaultValue;
+    }
+    return obj[currentPath];
+  }
+
+  return get(obj[currentPath], (<ObjectPath.PathTypes[]>path).slice(1), defaultValue, true, ownPropertiesOnly);
+}
+
+var skipProps: any = {
+  bind: true,
+  ObjectPathError: true
+};
+
+var objectPath: ObjectPath.Wrapper = {
+  ObjectPathError,
+  get,
+  set,
+  coalesce,
+  push,
+  ensureExists,
+  empty,
+  del,
+  insert,
+  has,
+  bind,
+  extend
+}
+
+function bind<O extends ObjectPath.O>(obj: O, noThrow: boolean = false, ownPropertiesOnly: boolean = true): ObjectPath.Bound<O> {
+  if (noThrow === false && isEmpty(obj, ownPropertiesOnly)) {
+    throw new ObjectPathError('provided object is empty');
+  }
+
+  var funcNames: any = [];
+  var self: typeof objectPath = this;
+
+  for (var x in self) {
+    if (!(x in skipProps) && typeof (<any>self)[x] === 'function') {
+      funcNames.push(x);
+    }
+  }
+
+  return funcNames.reduce(function(proxy: any, prop: string) {
+    /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
+    proxy[prop] = function() {
+      var args = [obj]
+      Array.prototype.push.apply(args, arguments)
+      return (<any>self)[prop].apply(self, args)
+    }
+    return proxy
+  }, {})
+}
+
+function extend<T>(ctor: ObjectPath.Extender<T>, noConflict: boolean = false): ObjectPath.Wrapper {
+  var base: ObjectPath.ExtenderBase = {
+    set,
+    merge,
+    coalesce,
+    del,
+    empty,
+    ensureExists,
+    isSymbol,
+    get,
+    getKey,
+    has,
+    insert,
+    isArray,
+    isBoolean,
+    isEmpty,
+    isNumber,
+    isObject,
+    isString,
+    push,
+    extend,
+    bind,
+    ObjectPathError
+  };
+
+  var self: typeof objectPath = this;
+
+  if (noConflict === true) {
+    return merge<{}, ObjectPath.Wrapper>({}, self, ctor(base));
+  } else {
+    return merge(self, ctor(base));
+  }
+}
+
+export = objectPath;

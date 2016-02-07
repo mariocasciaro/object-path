@@ -1,378 +1,608 @@
-(function (root, factory){
-    'use strict';
+(function (factory) {
 
-    /* istanbul ignore next */
-    if (typeof module === 'object' && typeof module.exports === 'object') {
-        module.exports = factory();
-    } else if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module.
-        define([], factory);
-    } else {
-    // Browser globals
-        root.objectPath = factory();
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    var v = factory(require, exports);
+
+    if (v !== undefined) {
+      module.exports = v;
     }
-})(this, function(){
-    var ObjectPath;
-    (function (ObjectPath) {
-        'use strict';
-        var toStr = Object.prototype.toString, _hasOwnProperty = Object.prototype.hasOwnProperty;
-        var defaultOptions = {
-            numberAsArray: true,
-            ownPropertiesOnly: true
-        };
-        function merge(base) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            if (!isObject(base)) {
-                base = {};
-            }
-            for (var _a = 0; _a < args.length; _a++) {
-                var arg = args[_a];
-                if (isObject(arg)) {
-                    for (var option in arg) {
-                        base[option] = arg[option];
-                    }
-                }
-            }
-            return base;
+  } else if (typeof define === 'function' && define.amd) {
+    define(['require', 'exports'], factory);
+  }
+
+})(function (require, exports) {
+  'use strict';
+  var _hasOwnProperty = Object.prototype.hasOwnProperty;
+
+  var _hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator !== 'undefined';
+
+  var ObjectPathError = (function () {
+
+    function ObjectPathError (message) {
+      this.message = message;
+
+      this.name = 'ObjectPathError';
+      ReferenceError.call(this, message);
+      /* istanbul ignore next: no need to test */
+
+      if (Error.captureStackTrace) {
+        Error.captureStackTrace(this, this.constructor);
+      }
+
+      /* istanbul ignore next: no need to test */
+
+      if (!this.stack) {
+        this.stack = (new Error).stack;
+      }
+    }
+
+    return ObjectPathError;
+  })();
+
+  ObjectPathError.prototype = Object.create(ReferenceError.prototype, {
+    constructor: {
+      value: ObjectPathError
+    }
+  });
+
+  function isNumber (value) {
+    return typeof value === 'number' && value.constructor === Number;
+  }
+
+  function isString (obj) {
+    return typeof obj === 'string' && obj.constructor === String;
+  }
+
+  function isObject (obj) {
+    return typeof obj === 'object' && obj !== null && obj.constructor !== Array;
+  }
+
+  function isSymbol (obj) {
+    return _hasSymbols && typeof obj === 'symbol' && obj.constructor === Symbol;
+  }
+
+  function isArray (obj) {
+    return typeof obj === 'object' && obj !== null && obj.constructor === Array;
+  }
+
+  function isBoolean (obj) {
+    return typeof obj === 'boolean' && obj.constructor === Boolean;
+  }
+
+  function merge (base) {
+    var args = [];
+
+    for (var _i = 1; _i < arguments.length; _i++) {
+      args[_i - 1] = arguments[_i];
+    }
+
+    if (!isObject(base)) {
+      base = {};
+    }
+
+    for (var _a = 0; _a < args.length; _a++) {
+      var arg = args[_a];
+
+      if (isObject(arg)) {
+        for (var option in arg) {
+          base[option] = arg[option];
         }
-        function isEmpty(value, ownPropertiesOnly) {
-            // String, boolean, number that is either '', false or 0 respectivelly or null and undefined
-            if (!value) {
-                return true;
-            }
-            if (isArray(value) && value.length === 0) {
-                return true;
-            }
-            else if (!isString(value)) {
-                for (var i in value) {
-                    if (ownPropertiesOnly === true) {
-                        // Must have own property to be considered non-empty
-                        if (_hasOwnProperty.call(value, i)) {
-                            return false;
-                        }
-                    }
-                    else {
-                        // Since it has at least one member, assume non-empty, return immediately
-                        return false;
-                    }
-                }
-                return true;
-            }
+      }
+    }
+
+    return base;
+  }
+
+  function isEmpty (value, ownPropertiesOnly) {
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    // String, boolean, number that is either '', false respectivelly or null and undefined
+    // 0 is a valid "path", as it can refer to either the key of an object, or an array index
+
+    if (!value) {
+      if (value === 0) {
+        return false;
+      }
+
+      return true;
+    } else if (isNumber(value)) {
+      return false;
+    }
+
+    // Preemptively return as soon as we get something for performance reasons
+
+    if (isArray(value) && value.length === 0) {
+      return true;
+    } else if (isSymbol(value)) {
+      return false;
+    } else if (!isString(value)) {
+      for (var i in value) {
+        if (ownPropertiesOnly === true) {
+          // Must have own property to be considered non-empty
+
+          if (_hasOwnProperty.call(value, i)) {
             return false;
+          }
+        } else {
+          // Since it has at least one member, assume non-empty, return immediately
+
+          return false;
         }
-        function toString(type) {
-            return toStr.call(type);
+      }
+
+      // symbols can't be walked with for in
+      /* istanbul ignore else */
+
+      if (_hasSymbols) {
+        if (Object.getOwnPropertySymbols(value).length) {
+          return false;
         }
-        function isNumber(value) {
-            return typeof value === 'number' || toString(value) === "[object Number]";
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  function getKey (key) {
+    if (isSymbol(key)) {
+      return key;
+    }
+
+    // Perf: http://jsperf.com/tostring-vs-typecast-vs
+
+    if (('' + ~~key) === key) {
+      // Return the integer if it's a real number
+
+      return ~~key;
+    }
+
+    return key;
+  }
+
+  function ensureExists (obj, path, value, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    return set(obj, path, value, true, noThrow, ownPropertiesOnly);
+  }
+
+  function set (obj, path, value, doNotReplace, noThrow, ownPropertiesOnly) {
+    if (doNotReplace === void 0) {
+      doNotReplace = false;
+    }
+
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    if (typeof obj !== 'object' && isEmpty(obj, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return obj;
+      }
+
+      throw new ObjectPathError('provided object is empty');
+    }
+
+    if (isNumber(path) || isSymbol(path)) {
+      path = [path];
+    }
+
+    if (isEmpty(path, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return obj;
+      }
+
+      throw new ObjectPathError('provided path is empty');
+    }
+
+    if (isString(path)) {
+      path = path.split('.');
+
+      return set(obj, path.map(getKey), value, doNotReplace, noThrow, ownPropertiesOnly);
+    }
+
+    var currentPath = path[0];
+
+    if (path.length === 1) {
+      var oldVal = obj[currentPath];
+
+      if (oldVal === void 0 || !doNotReplace) {
+        obj[currentPath] = value;
+      }
+
+      return oldVal;
+    }
+
+    if (obj[currentPath] === void 0) {
+      if (isNumber(path[1])) {
+        obj[currentPath] = [];
+      } else {
+        obj[currentPath] = {};
+      }
+    }
+
+    return set(obj[currentPath], path.slice(1), value, doNotReplace, true, ownPropertiesOnly);
+  }
+
+  function del (obj, path, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    if (isEmpty(obj, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return obj;
+      }
+
+      throw new ObjectPathError('provided object is empty');
+    }
+
+    if (isNumber(path) || isSymbol(path)) {
+      path = [path];
+    }
+
+    if (isEmpty(path, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return obj;
+      }
+
+      throw new ObjectPathError('provided path is empty');
+    }
+
+    if (isString(path)) {
+      return del(obj, path.split('.'), noThrow, ownPropertiesOnly);
+    }
+
+    var currentPath = getKey(path[0]);
+    var oldVal = obj[currentPath];
+
+    if (path.length === 1) {
+      if (oldVal !== void 0) {
+        if (isNumber(currentPath) && isArray(obj)) {
+          obj.splice(currentPath, 1);
+        } else {
+          delete obj[currentPath];
         }
-        function isString(obj) {
-            return typeof obj === 'string' || toString(obj) === "[object String]";
+      }
+    } else if (obj[currentPath] !== void 0) {
+      return del(obj[currentPath], path.slice(1), true, ownPropertiesOnly);
+    }
+
+    return obj;
+  }
+
+  function has (obj, path, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    if (isEmpty(obj, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return false;
+      }
+
+      throw new ObjectPathError('provided object is empty');
+    }
+
+    if (isNumber(path) || isSymbol(path)) {
+      path = [path];
+    }
+
+    if (isEmpty(path, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return false;
+      }
+
+      throw new ObjectPathError('provided path is empty');
+    }
+
+    if (isString(path)) {
+      path = path.split('.');
+    }
+
+    for (var i = 0; i < path.length; i++) {
+      var j = path[i];
+
+      if (isObject(obj) || isArray(obj)) {
+        if (ownPropertiesOnly) {
+          if (_hasOwnProperty.call(obj, j)) {
+            obj = obj[j];
+          } else {
+            return false;
+          }
+        } else {
+          if (j in obj) {
+            obj = obj[j];
+          } else {
+            return false;
+          }
         }
-        function isObject(obj) {
-            return typeof obj === 'object' && toString(obj) === "[object Object]";
+      } else {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function insert (obj, path, value, at, noThrow, ownPropertiesOnly) {
+    if (at === void 0) {
+      at = 0;
+    }
+
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    var arr = get(obj, path, void 0, noThrow, ownPropertiesOnly);
+
+    at = ~~at;
+
+    if (!isArray(arr)) {
+      arr = [];
+      set(obj, path, arr, false, noThrow, ownPropertiesOnly);
+    }
+
+    arr.splice(at, 0, value);
+  }
+
+  function empty (obj, path, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    var value = get(obj, path, Number.NaN, noThrow, ownPropertiesOnly);
+
+    if (value !== value) {
+      return void 0;
+    }
+
+    if (isString(value)) {
+      return set(obj, path, '', false, noThrow, ownPropertiesOnly);
+    } else if (isBoolean(value)) {
+      return set(obj, path, false, false, noThrow, ownPropertiesOnly);
+    } else if (isNumber(value)) {
+      return set(obj, path, 0, false, noThrow, ownPropertiesOnly);
+    } else if (isArray(value)) {
+      value.length = 0;
+    } else if (isObject(value)) {
+      for (var i in value) {
+        if (ownPropertiesOnly === true) {
+          if (_hasOwnProperty.call(value, i)) {
+            delete value[i];
+          }
+        } else {
+          delete value[i];
         }
-        function isArray(obj) {
-            return typeof obj === 'object' && typeof obj.length === 'number' && toString(obj) === '[object Array]';
+      }
+
+      /* istanbul ignore else */
+
+      if (_hasSymbols) {
+        var symbols = Object.getOwnPropertySymbols(value);
+
+        if (symbols.length) {
+          for (var x = 0; x < symbols.length; x++) {
+            delete value[symbols[x]];
+          }
         }
-        function isBoolean(obj) {
-            return typeof obj === 'boolean' || toString(obj) === '[object Boolean]';
-        }
-        function getKey(key) {
-            var intKey = parseInt(key, 10);
-            if (intKey.toString() === key) {
-                // Return the integer if it's a real number
-                return intKey;
-            }
-            return key;
-        }
-        function ensureExists(obj, path, value, options) {
-            return set(obj, path, value, true, options);
-        }
-        function set(obj, path, value, doNotReplace, options) {
-            if (isNumber(path)) {
-                path = [path];
-            }
-            if (isEmpty(path, options.ownPropertiesOnly)) {
-                return obj;
-            }
-            if (isString(path)) {
-                path = path.split('.');
-                return set(obj, (!options.numberAsArray ? path : path.map(getKey)), value, doNotReplace, options);
-            }
-            var currentPath = path[0];
-            if (path.length === 1) {
-                var oldVal = obj[currentPath];
-                if (oldVal === void 0 || !doNotReplace) {
-                    obj[currentPath] = value;
-                }
-                return oldVal;
-            }
-            if (obj[currentPath] === void 0) {
-                if (isNumber(path[1])) {
-                    // Check if we assume an array per provided options, numberAsArray
-                    obj[currentPath] = [];
-                }
-                else {
-                    obj[currentPath] = {};
-                }
-            }
-            return set(obj[currentPath], path.slice(1), value, doNotReplace, options);
-        }
-        function del(obj, path, ownPropertiesOnly) {
-            if (isNumber(path)) {
-                path = [path];
-            }
-            if (isEmpty(obj, ownPropertiesOnly)) {
-                return void 0;
-            }
-            if (isEmpty(path, ownPropertiesOnly)) {
-                return obj;
-            }
-            if (isString(path)) {
-                return del(obj, path.split('.'), ownPropertiesOnly);
-            }
-            var currentPath = getKey(path[0]);
-            var oldVal = obj[currentPath];
-            if (path.length === 1) {
-                if (oldVal !== void 0) {
-                    if (isArray(obj)) {
-                        obj.splice(currentPath, 1);
-                    }
-                    else {
-                        delete obj[currentPath];
-                    }
-                }
-            }
-            else {
-                if (obj[currentPath] !== void 0) {
-                    return del(obj[currentPath], path.slice(1), ownPropertiesOnly);
-                }
-            }
-            return obj;
-        }
-        function has(obj, path, ownPropertiesOnly) {
-            if (isEmpty(obj, ownPropertiesOnly)) {
-                return false;
-            }
-            if (isNumber(path)) {
-                path = [path];
-            }
-            else if (isString(path)) {
-                path = path.split('.');
-            }
-            if (isEmpty(path, ownPropertiesOnly) || path.length === 0) {
-                return false;
-            }
-            for (var i = 0; i < path.length; i++) {
-                var j = path[i];
-                if (isObject(obj) || isArray(obj)) {
-                    if (ownPropertiesOnly) {
-                        if (_hasOwnProperty.call(obj, j)) {
-                            obj = obj[j];
-                        }
-                        else {
-                            return false;
-                        }
-                    }
-                    else {
-                        if (j in obj) {
-                            obj = obj[j];
-                        }
-                        else {
-                            return false;
-                        }
-                    }
-                }
-                else {
-                    return false;
-                }
-            }
-            return true;
-        }
-        function insert(obj, path, value, at, options) {
-            var arr = get(obj, path, void 0, options.ownPropertiesOnly);
-            at = ~~at;
-            if (!isArray(arr)) {
-                arr = [];
-                set(obj, path, arr, false, options);
-            }
-            arr.splice(at, 0, value);
-        }
-        function empty(obj, path, options) {
-            if (isEmpty(path, options.ownPropertiesOnly)) {
-                return obj;
-            }
-            if (isEmpty(obj, options.ownPropertiesOnly)) {
-                return void 0;
-            }
-            var value;
-            if (!(value = get(obj, path, void 0, options.ownPropertiesOnly))) {
-                return obj;
-            }
-            if (isString(value)) {
-                return set(obj, path, '', false, options);
-            }
-            else if (isBoolean(value)) {
-                return set(obj, path, false, false, options);
-            }
-            else if (isNumber(value)) {
-                return set(obj, path, 0, false, options);
-            }
-            else if (isArray(value)) {
-                value.length = 0;
-            }
-            else if (isObject(value)) {
-                for (var i in value) {
-                    if (_hasOwnProperty.call(value, i)) {
-                        delete value[i];
-                    }
-                }
-            }
-            else {
-                return set(obj, path, null, false, options);
-            }
-        }
-        function push(obj, path) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            var options = args[args.length - 1];
-            if (isObject(options)) {
-                if (!('ownPropertiesOnly' in options)) {
-                    options = defaultOptions;
-                }
-                else {
-                    args.pop();
-                }
-            }
-            else {
-                options = defaultOptions;
-            }
-            var arr = get(obj, path, void 0, options.ownPropertiesOnly);
-            if (!isArray(arr)) {
-                arr = [];
-                set(obj, path, arr, false, options);
-            }
-            arr.push.apply(arr, args);
-        }
-        function coalesce(obj, paths, defaultValue, ownPropertiesOnly) {
-            var value;
-            for (var i = 0, len = paths.length; i < len; i++) {
-                if ((value = get(obj, paths[i], void 0, ownPropertiesOnly)) !== void 0) {
-                    return value;
-                }
-            }
-            return defaultValue;
-        }
-        function get(obj, path, defaultValue, ownPropertiesOnly) {
-            if (isNumber(path)) {
-                path = [path];
-            }
-            if (isEmpty(path, ownPropertiesOnly)) {
-                return obj;
-            }
-            if (isEmpty(obj, ownPropertiesOnly)) {
-                return defaultValue;
-            }
-            if (isString(path)) {
-                return get(obj, path.split('.'), defaultValue, ownPropertiesOnly);
-            }
-            var currentPath = getKey(path[0]);
-            if (path.length === 1) {
-                if (obj[currentPath] === void 0) {
-                    return defaultValue;
-                }
-                return obj[currentPath];
-            }
-            return get(obj[currentPath], path.slice(1), defaultValue, ownPropertiesOnly);
-        }
-        var Class = (function () {
-            function Class(options) {
-                this.Class = Class;
-                this.options = merge({}, defaultOptions, options);
-            }
-            Class.prototype.set = function (obj, path, value, doNotReplace) {
-                return set(obj, path, value, doNotReplace, this.options);
-            };
-            Class.prototype.ensureExists = function (obj, path, value) {
-                return ensureExists(obj, path, value, this.options);
-            };
-            Class.prototype.get = function (obj, path, defaultValue) {
-                return get(obj, path, defaultValue, this.options.ownPropertiesOnly);
-            };
-            Class.prototype.del = function (obj, path) {
-                return del(obj, path, this.options.ownPropertiesOnly);
-            };
-            Class.prototype.option = function (options) {
-                merge(this.options, options);
-                return this;
-            };
-            Class.prototype.extend = function (ctor) {
-                var base = {
-                    set: set,
-                    merge: merge,
-                    coalesce: coalesce,
-                    del: del,
-                    empty: empty,
-                    ensureExists: ensureExists,
-                    get: get,
-                    getKey: getKey,
-                    has: has,
-                    insert: insert,
-                    isArray: isArray,
-                    isBoolean: isBoolean,
-                    isEmpty: isEmpty,
-                    isNumber: isNumber,
-                    isObject: isObject,
-                    isString: isString,
-                    push: push
-                };
-                merge(this, ctor(base, this.options));
-                return this;
-            };
-            Class.prototype.has = function (obj, path) {
-                return has(obj, path, this.options.ownPropertiesOnly);
-            };
-            Class.prototype.coalesce = function (obj, paths, defaultValue) {
-                return coalesce(obj, paths, defaultValue, this.options.ownPropertiesOnly);
-            };
-            Class.prototype.push = function (obj, path) {
-                var args = [];
-                for (var _i = 2; _i < arguments.length; _i++) {
-                    args[_i - 2] = arguments[_i];
-                }
-                push.apply(void 0, [obj, path].concat(args, this.options));
-                return this;
-            };
-            Class.prototype.insert = function (obj, path, value, at) {
-                insert(obj, path, value, at, this.options);
-                return this;
-            };
-            Class.prototype.empty = function (obj, path) {
-                return empty(obj, path, this.options);
-            };
-            Class.prototype.bind = function (obj) {
-                var self = this, out = {};
-                return Object.getOwnPropertyNames(Class.prototype).reduce(function (proxy, prop) {
-                    if (typeof self[prop] === 'function' && !(prop in { 'bind': true, 'extend': true, 'option': true })) {
-                        /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
-                        proxy[prop] = function () {
-                            var args = [obj];
-                            Array.prototype.push.apply(args, arguments);
-                            return self[prop].apply(self, args);
-                        };
-                    }
-                    return proxy;
-                }, out);
-            };
-            return Class;
-        })();
-        ObjectPath.Class = Class;
-    })(ObjectPath || (ObjectPath = {}));
-    return new ObjectPath.Class();
-}); 
+      }
+    } else {
+      return set(obj, path, null, false, noThrow, ownPropertiesOnly);
+    }
+  }
+
+  function push (obj, path, args, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    if (!isArray(args)) {
+      // breaking change needs to be forcefully noticed
+      throw new ObjectPathError('3rd parameter "args" must be an array');
+    }
+
+    var arr = get(obj, path, void 0, noThrow, ownPropertiesOnly);
+
+    if (!isArray(arr)) {
+      arr = [];
+      set(obj, path, arr, false, noThrow, ownPropertiesOnly);
+    }
+
+    Array.prototype.push.apply(arr, args);
+  }
+
+  function coalesce (obj, paths, defaultValue, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    var value;
+
+    for (var i = 0, len = paths.length; i < len; i++) {
+      value = get(obj, paths[i], Number.NaN, noThrow, ownPropertiesOnly);
+      // looks silly but NaN is never equal to itself, it's a good unique value
+
+      if (value === value) {
+        return value;
+      }
+    }
+
+    return defaultValue;
+  }
+
+  function get (obj, path, defaultValue, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    if (isEmpty(obj, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return defaultValue;
+      }
+
+      throw new ObjectPathError('provided object is empty');
+    }
+
+    if (isNumber(path) || isSymbol(path)) {
+      path = [path];
+    }
+
+    if (isEmpty(path, ownPropertiesOnly)) {
+      if (noThrow === true) {
+        return defaultValue;
+      }
+
+      throw new ObjectPathError('provided path is empty');
+    }
+
+    if (isString(path)) {
+      return get(obj, path.split('.'), defaultValue, noThrow, ownPropertiesOnly);
+    }
+
+    var currentPath = getKey(path[0]);
+
+    if (path.length === 1) {
+      if (obj[currentPath] === void 0) {
+        return defaultValue;
+      }
+
+      return obj[currentPath];
+    }
+
+    return get(obj[currentPath], path.slice(1), defaultValue, true, ownPropertiesOnly);
+  }
+  var skipProps = {bind: true,ObjectPathError: true};
+
+  var objectPath = {
+    ObjectPathError: ObjectPathError,
+    get: get,
+    set: set,
+    coalesce: coalesce,
+    push: push,
+    ensureExists: ensureExists,
+    empty: empty,
+    del: del,
+    insert: insert,
+    has: has,
+    bind: bind,
+    extend: extend
+  };
+
+  function bind (obj, noThrow, ownPropertiesOnly) {
+    if (noThrow === void 0) {
+      noThrow = false;
+    }
+
+    if (ownPropertiesOnly === void 0) {
+      ownPropertiesOnly = true;
+    }
+
+    if (noThrow === false && isEmpty(obj, ownPropertiesOnly)) {
+      throw new ObjectPathError('provided object is empty');
+    }
+
+    var funcNames = [];
+    var self = this;
+
+    for (var x in self) {
+      if (!(x in skipProps) && typeof self[x] === 'function') {
+        funcNames.push(x);
+      }
+    }
+
+    return funcNames.reduce(function (proxy, prop) {
+      /* Function.prototype.bind is easier, but much slower in V8 (aka node/chrome) */
+
+      proxy[prop] = function () {
+        var args = [obj];
+
+        Array.prototype.push.apply(args, arguments);
+
+        return self[prop].apply(self, args);
+      };
+
+      return proxy;
+    }, {});
+  }
+
+  function extend (ctor, noConflict) {
+    if (noConflict === void 0) {
+      noConflict = false;
+    }
+
+    var base = {
+      set: set,
+      merge: merge,
+      coalesce: coalesce,
+      del: del,
+      empty: empty,
+      ensureExists: ensureExists,
+      isSymbol: isSymbol,
+      get: get,
+      getKey: getKey,
+      has: has,
+      insert: insert,
+      isArray: isArray,
+      isBoolean: isBoolean,
+      isEmpty: isEmpty,
+      isNumber: isNumber,
+      isObject: isObject,
+      isString: isString,
+      push: push,
+      extend: extend,
+      bind: bind,
+      ObjectPathError: ObjectPathError
+    };
+    var self = this;
+
+    if (noConflict === true) {
+      return merge({}, self, ctor(base));
+    } else {
+      return merge(self, ctor(base));
+    }
+  }
+
+  return objectPath;
+});
