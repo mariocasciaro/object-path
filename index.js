@@ -6,21 +6,6 @@
         define(["require", "exports"], factory);
     }
 })(function (require, exports) {
-    /*
-    (function (factory) {
-      /* globals define * /
-      if (typeof module === 'object' && typeof module.exports === 'object') {
-        factory(require, module.exports)
-      } else if (typeof define === 'function' && define.amd) {
-        define(['require', 'exports'], factory)
-      } else {
-        var x = {}
-        factory(require, x)
-        window.ObjectPathModule = x
-        window.objectPath = window.ObjectPathModule.instance
-      }
-    }
-    */
     'use strict';
     var _hasOwnProperty = Object.prototype.hasOwnProperty;
     var _hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator !== 'undefined';
@@ -29,6 +14,14 @@
             this.message = message;
             this.name = 'ObjectPathError';
             ReferenceError.call(this, message);
+            /* istanbul ignore next: no need to test */
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(this, this.constructor);
+            }
+            /* istanbul ignore next: no need to test */
+            if (!this.stack) {
+                this.stack = (new Error).stack;
+            }
         }
         return ObjectPathError;
     })();
@@ -50,7 +43,7 @@
         return _hasSymbols && typeof obj === 'symbol' && obj.constructor === Symbol;
     }
     function isArray(obj) {
-        return Array.isArray ? Array.isArray(obj) : typeof obj === 'object' && obj !== null && obj.constructor === Array;
+        return typeof obj === 'object' && obj !== null && obj.constructor === Array;
     }
     function isBoolean(obj) {
         return typeof obj === 'boolean' && obj.constructor === Boolean;
@@ -77,8 +70,14 @@
         if (ownPropertiesOnly === void 0) { ownPropertiesOnly = true; }
         // String, boolean, number that is either '', false respectivelly or null and undefined
         // 0 is a valid "path", as it can refer to either the key of an object, or an array index
-        if (!value && value !== 0) {
+        if (!value) {
+            if (value === 0) {
+                return false;
+            }
             return true;
+        }
+        else if (isNumber(value)) {
+            return false;
         }
         // Preemptively return as soon as we get something for performance reasons
         if (isArray(value) && value.length === 0) {
@@ -131,11 +130,20 @@
         if (doNotReplace === void 0) { doNotReplace = false; }
         if (noThrow === void 0) { noThrow = false; }
         if (ownPropertiesOnly === void 0) { ownPropertiesOnly = true; }
-        if (noThrow === false && isEmpty(path, ownPropertiesOnly)) {
-            throw new ObjectPathError('provided path is empty');
+        if (typeof obj !== 'object' && isEmpty(obj, ownPropertiesOnly)) {
+            if (noThrow === true) {
+                return obj;
+            }
+            throw new ObjectPathError('provided object is empty');
         }
         if (isNumber(path) || isSymbol(path)) {
             path = [path];
+        }
+        if (isEmpty(path, ownPropertiesOnly)) {
+            if (noThrow === true) {
+                return obj;
+            }
+            throw new ObjectPathError('provided path is empty');
         }
         if (isString(path)) {
             path = path.split('.');
@@ -162,14 +170,20 @@
     function del(obj, path, noThrow, ownPropertiesOnly) {
         if (noThrow === void 0) { noThrow = false; }
         if (ownPropertiesOnly === void 0) { ownPropertiesOnly = true; }
-        if (noThrow === false && isEmpty(path, ownPropertiesOnly)) {
-            throw new ObjectPathError('provided path is empty');
-        }
-        if (noThrow === false && isEmpty(obj, ownPropertiesOnly)) {
+        if (isEmpty(obj, ownPropertiesOnly)) {
+            if (noThrow === true) {
+                return obj;
+            }
             throw new ObjectPathError('provided object is empty');
         }
         if (isNumber(path) || isSymbol(path)) {
             path = [path];
+        }
+        if (isEmpty(path, ownPropertiesOnly)) {
+            if (noThrow === true) {
+                return obj;
+            }
+            throw new ObjectPathError('provided path is empty');
         }
         if (isString(path)) {
             return del(obj, path.split('.'), noThrow, ownPropertiesOnly);
@@ -186,25 +200,30 @@
                 }
             }
         }
-        else {
-            if (obj[currentPath] !== void 0) {
-                return del(obj[currentPath], path.slice(1), false, ownPropertiesOnly);
-            }
+        else if (obj[currentPath] !== void 0) {
+            return del(obj[currentPath], path.slice(1), true, ownPropertiesOnly);
         }
         return obj;
     }
-    function has(obj, path, ownPropertiesOnly) {
+    function has(obj, path, noThrow, ownPropertiesOnly) {
+        if (noThrow === void 0) { noThrow = false; }
         if (ownPropertiesOnly === void 0) { ownPropertiesOnly = true; }
         if (isEmpty(obj, ownPropertiesOnly)) {
+            if (noThrow === true) {
+                return false;
+            }
             throw new ObjectPathError('provided object is empty');
-        }
-        if (isEmpty(path, ownPropertiesOnly)) {
-            throw new ObjectPathError('provided path is empty');
         }
         if (isNumber(path) || isSymbol(path)) {
             path = [path];
         }
-        else if (isString(path)) {
+        if (isEmpty(path, ownPropertiesOnly)) {
+            if (noThrow === true) {
+                return false;
+            }
+            throw new ObjectPathError('provided path is empty');
+        }
+        if (isString(path)) {
             path = path.split('.');
         }
         for (var i = 0; i < path.length; i++) {
@@ -233,14 +252,15 @@
         }
         return true;
     }
-    function insert(obj, path, value, at, ownPropertiesOnly) {
+    function insert(obj, path, value, at, noThrow, ownPropertiesOnly) {
         if (at === void 0) { at = 0; }
+        if (noThrow === void 0) { noThrow = false; }
         if (ownPropertiesOnly === void 0) { ownPropertiesOnly = true; }
-        var arr = get(obj, path, void 0, ownPropertiesOnly);
+        var arr = get(obj, path, void 0, noThrow, ownPropertiesOnly);
         at = ~~at;
         if (!isArray(arr)) {
             arr = [];
-            set(obj, path, arr, false, ownPropertiesOnly);
+            set(obj, path, arr, false, noThrow, ownPropertiesOnly);
         }
         arr.splice(at, 0, value);
     }
@@ -292,12 +312,13 @@
         if (noThrow === void 0) { noThrow = false; }
         if (ownPropertiesOnly === void 0) { ownPropertiesOnly = true; }
         if (!isArray(args)) {
+            // breaking change needs to be forcefully noticed
             throw new ObjectPathError('3rd parameter "args" must be an array');
         }
         var arr = get(obj, path, void 0, noThrow, ownPropertiesOnly);
         if (!isArray(arr)) {
             arr = [];
-            set(obj, path, arr, false, ownPropertiesOnly);
+            set(obj, path, arr, false, noThrow, ownPropertiesOnly);
         }
         Array.prototype.push.apply(arr, args);
     }
@@ -326,14 +347,14 @@
         if (isNumber(path) || isSymbol(path)) {
             path = [path];
         }
-        if (isString(path)) {
-            return get(obj, path.split('.'), defaultValue, noThrow, ownPropertiesOnly);
-        }
         if (isEmpty(path, ownPropertiesOnly)) {
             if (noThrow === true) {
                 return defaultValue;
             }
             throw new ObjectPathError('provided path is empty');
+        }
+        if (isString(path)) {
+            return get(obj, path.split('.'), defaultValue, noThrow, ownPropertiesOnly);
         }
         var currentPath = getKey(path[0]);
         if (path.length === 1) {
@@ -410,8 +431,7 @@
             return merge({}, objectPath, ctor(base));
         }
         else {
-            merge(objectPath, ctor(base));
-            return objectPath;
+            return merge(objectPath, ctor(base));
         }
     }
     return objectPath;

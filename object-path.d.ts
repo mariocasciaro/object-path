@@ -4,7 +4,7 @@ declare namespace ObjectPath {
     [index: string]: any;
   }
   export type PathTypes = (Array<string | number | symbol>) | (number | string | symbol | PathTypesAny);
-  export type Extender = (base: ExtenderBase) => Object;
+  export type Extender<T> = (base: ExtenderBase) => T;
 
   export class ObjectPathError implements ReferenceError {
     message: string;

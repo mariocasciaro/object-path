@@ -1,18 +1,3 @@
-/*
-(function (factory) {
-  /* globals define * /
-  if (typeof module === 'object' && typeof module.exports === 'object') {
-    factory(require, module.exports)
-  } else if (typeof define === 'function' && define.amd) {
-    define(['require', 'exports'], factory)
-  } else {
-    var x = {}
-    factory(require, x)
-    window.ObjectPathModule = x
-    window.objectPath = window.ObjectPathModule.instance
-  }
-}
-*/
 'use strict';
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty
@@ -20,9 +5,20 @@ var _hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator !== 'un
 
 class ObjectPathError implements ReferenceError {
   name = 'ObjectPathError';
+  stack: string;
 
   constructor(public message: string) {
     ReferenceError.call(this, message);
+
+    /* istanbul ignore next: no need to test */
+    if (Error.captureStackTrace) { // v8
+      Error.captureStackTrace(this, this.constructor);
+    }
+
+    /* istanbul ignore next: no need to test */
+    if (!this.stack) { // non-old IE, Firefox
+      this.stack = (new Error).stack;
+    }
   }
 
 }
@@ -50,7 +46,7 @@ function isSymbol(obj: any): obj is symbol {
 }
 
 function isArray(obj: any): obj is any[] {
-  return Array.isArray ? Array.isArray(obj) : typeof obj === 'object' && obj !== null && obj.constructor === Array;
+  return typeof obj === 'object' && obj !== null && obj.constructor === Array;
 }
 
 function isBoolean(obj: any): obj is boolean {
@@ -76,8 +72,13 @@ function merge<T extends any, U>(base: T, ...args: any[]): T & U {
 function isEmpty(value: string|boolean|symbol|number|Array<any>|Object, ownPropertiesOnly: boolean = true): boolean {
   // String, boolean, number that is either '', false respectivelly or null and undefined
   // 0 is a valid "path", as it can refer to either the key of an object, or an array index
-  if (!value && value !== 0) {
+  if (!value) {
+    if (value === 0) {
+      return false;
+    }
     return true;
+  } else if (isNumber(value)) {
+    return false;
   }
 
   // Preemptively return as soon as we get something for performance reasons
@@ -130,18 +131,29 @@ function ensureExists<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes
 }
 
 function set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, doNotReplace: boolean = false, noThrow: boolean = false, ownPropertiesOnly: boolean = true): any {
-  if (noThrow === false && isEmpty(path, ownPropertiesOnly)) {
-    throw new ObjectPathError('provided path is empty');
+  if (typeof obj !== 'object' && isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided object is empty');
   }
 
   if (isNumber(path) || isSymbol(path)) {
     path = [path];
   }
 
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
   if (isString(path)) {
     path = (<string>path).split('.');
     return set(obj, (<Array<string>>path).map(getKey), value, doNotReplace, noThrow, ownPropertiesOnly);
   }
+
 
   var currentPath: any = (<Array<string>>path)[0];
 
@@ -165,11 +177,10 @@ function set<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: 
 }
 
 function del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, noThrow: boolean = false, ownPropertiesOnly: boolean = true): O {
-  if (noThrow === false && isEmpty(path, ownPropertiesOnly)) {
-    throw new ObjectPathError('provided path is empty');
-  }
-
-  if (noThrow === false && isEmpty(obj, ownPropertiesOnly)) {
+  if (isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
     throw new ObjectPathError('provided object is empty');
   }
 
@@ -177,9 +188,17 @@ function del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, noThrow
     path = [path];
   }
 
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return obj;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
   if (isString(path)) {
     return del(obj, path.split('.'), noThrow, ownPropertiesOnly);
   }
+
 
   var currentPath = getKey((<any>path)[0]);
   var oldVal = obj[currentPath];
@@ -192,27 +211,33 @@ function del<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, noThrow
         delete obj[currentPath];
       }
     }
-  } else {
-    if (obj[currentPath] !== void 0) {
-      return del(obj[currentPath], (<ObjectPath.PathTypes[]>path).slice(1), false, ownPropertiesOnly);
-    }
+  } else if (obj[currentPath] !== void 0) {
+    return del(obj[currentPath], (<ObjectPath.PathTypes[]>path).slice(1), true, ownPropertiesOnly);
   }
 
   return obj;
 }
 
-function has<O extends ObjectPath.O>(obj: O, path:  ObjectPath.PathTypes, ownPropertiesOnly: boolean = true): boolean {
+function has<O extends ObjectPath.O>(obj: O, path:  ObjectPath.PathTypes, noThrow: boolean = false, ownPropertiesOnly: boolean = true): boolean {
   if (isEmpty(obj, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return false;
+    }
     throw new ObjectPathError('provided object is empty');
-  }
-
-  if (isEmpty(path, ownPropertiesOnly)) {
-    throw new ObjectPathError('provided path is empty');
   }
 
   if (isNumber(path) || isSymbol(path)) {
     path = [path];
-  } else if (isString(path)) {
+  }
+
+  if (isEmpty(path, ownPropertiesOnly)) {
+    if (noThrow === true) {
+      return false;
+    }
+    throw new ObjectPathError('provided path is empty');
+  }
+
+  if (isString(path)) {
     path = (<string>path).split('.');
   }
 
@@ -242,12 +267,12 @@ function has<O extends ObjectPath.O>(obj: O, path:  ObjectPath.PathTypes, ownPro
   return true;
 }
 
-function insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at: number = 0, ownPropertiesOnly: boolean = true): void {
-  var arr = get(obj, path, void 0, ownPropertiesOnly);
+function insert<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, value: any, at: number = 0, noThrow: boolean = false, ownPropertiesOnly: boolean = true): void {
+  var arr = get(obj, path, void 0, noThrow, ownPropertiesOnly);
   at = ~~at;
   if (!isArray(arr)) {
     arr = [];
-    set(obj, path, arr, false, ownPropertiesOnly);
+    set(obj, path, arr, false, noThrow, ownPropertiesOnly);
   }
   arr.splice(at, 0, value);
 }
@@ -294,13 +319,14 @@ function empty<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, noThr
 
 function push<O extends ObjectPath.O>(obj: O, path: ObjectPath.PathTypes, args: Array<any>, noThrow: boolean = false, ownPropertiesOnly: boolean = true): void {
   if (!isArray(args)) {
+    // breaking change needs to be forcefully noticed
     throw new ObjectPathError('3rd parameter "args" must be an array');
   }
 
   var arr: any[] = get(obj, path, void 0, noThrow, ownPropertiesOnly);
   if (!isArray(arr)) {
     arr = [];
-    set(obj, path, arr, false, ownPropertiesOnly);
+    set(obj, path, arr, false, noThrow, ownPropertiesOnly);
   }
 
   Array.prototype.push.apply(arr, args);
@@ -333,15 +359,15 @@ function get<O extends ObjectPath.O, T>(obj: O, path: ObjectPath.PathTypes, defa
     path = [path];
   }
 
-  if (isString(path)) {
-    return get(obj, path.split('.'), defaultValue, noThrow, ownPropertiesOnly);
-  }
-
   if (isEmpty(path, ownPropertiesOnly)) {
     if (noThrow === true) {
       return defaultValue;
     }
     throw new ObjectPathError('provided path is empty');
+  }
+
+  if (isString(path)) {
+    return get(obj, path.split('.'), defaultValue, noThrow, ownPropertiesOnly);
   }
 
   var currentPath = getKey((<any>path)[0]);
@@ -400,7 +426,7 @@ function bind<O extends ObjectPath.O>(obj: O, noThrow: boolean = false, ownPrope
   }, {})
 }
 
-function extend(ctor: ObjectPath.Extender, noConflict: boolean = false): ObjectPath.Wrapper {
+function extend<T>(ctor: ObjectPath.Extender<T>, noConflict: boolean = false): ObjectPath.Wrapper {
   var base: ObjectPath.ExtenderBase = {
     set,
     merge,
@@ -425,9 +451,7 @@ function extend(ctor: ObjectPath.Extender, noConflict: boolean = false): ObjectP
   if (noConflict === true) {
     return merge<{}, ObjectPath.Wrapper>({}, objectPath, ctor(base));
   } else {
-    merge(objectPath, ctor(base));
-
-    return objectPath;
+    return merge(objectPath, ctor(base));
   }
 }
 

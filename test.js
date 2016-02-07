@@ -105,15 +105,23 @@ describe('objectPath', function () {
       expect(objectPath.get(obj, ['1b'], null)).to.be.equal(null);
     });
 
-    it('should return the default value when path is empty', function () {
+    it('should throw when path is empty', function () {
       var obj = { '1a': 'foo' };
-      expect(objectPath.get(obj, '', null)).to.be.deep.equal(null);
-      expect(objectPath.get(obj, [])).to.be.equal(void 0);
-      expect(objectPath.get({}, ['1'])).to.be.equal(void 0);
+      expect(function(){
+        objectPath.get(obj, '', null)
+      }).to.throw();
+      expect(function(){
+        objectPath.get(obj, [])
+      }).to.throw();
+      expect(function(){
+        objectPath.get({}, ['1'])
+      }).to.throw();
     });
 
-    it('should return the default value when obj is empty', function () {
-      expect(objectPath.get({}, 'path', null)).to.be.equal(null);
+    it('should throw when obj is empty', function () {
+      expect(function(){
+        objectPath.get({}, 'path', null)
+      }).to.throw();
     });
 
     it('should skip non own properties with isEmpty', function () {
@@ -130,7 +138,7 @@ describe('objectPath', function () {
 
       var extended = new Extended();
 
-      expect(objectPath.get(extended, ['one', 'two'])).to.be.equal(undefined);
+      expect(objectPath.get(extended, ['one', 'two'], undefined, true)).to.be.equal(undefined);
       extended.enabled = true;
 
       expect(objectPath.get(extended, 'enabled')).to.be.equal(true);
@@ -325,9 +333,11 @@ describe('objectPath', function () {
     });
 
 
-    it('should return the object if path is empty', function () {
+    it('should throw if path is empty', function () {
       var obj = getTestObj();
-      expect(objectPath.ensureExists(obj, [], 'test')).to.have.property('a', 'b');
+      expect(function(){
+        objectPath.ensureExists(obj, [], 'test');
+      }).to.throw();
     });
 
     it('Issue #26', function () {
@@ -403,14 +413,22 @@ describe('objectPath', function () {
   });
 
   describe('empty', function () {
-    it('should ignore invalid arguments safely', function () {
+    it('should throw in case of empty path or object', function () {
       var obj = {};
-      expect(objectPath.empty(obj, 'path')).to.equal(obj);
-      expect(objectPath.empty(obj, '')).to.equal(obj);
+
+      expect(function(){
+        objectPath.empty(obj, 'path');
+      }).to.throw();
+
+      expect(function(){
+        objectPath.empty(obj, '');
+      }).to.throw();
 
       obj.path = true;
 
-      expect(objectPath.empty(obj, 'inexistant')).to.equal(obj);
+      expect(function(){
+        objectPath.empty(obj, 'inexistant')
+      }).to.not.throw();
     });
 
     if (typeof Symbol === 'function') {
@@ -439,7 +457,7 @@ describe('objectPath', function () {
 
       var b = new B();
 
-      objectPath.empty(b, 'o', false);
+      objectPath.empty(b, 'o', true, false);
 
     });
 
@@ -498,8 +516,10 @@ describe('objectPath', function () {
   });
 
   describe('del', function () {
-    it('should return undefined on empty object', function () {
-      expect(objectPath.del({}, 'a')).to.equal(void 0);
+    it('should throw on empty object', function () {
+      expect(function(){
+        objectPath.del({}, 'a');
+      }).to.throw();
     });
 
     it('should work with number path', function () {
@@ -519,8 +539,6 @@ describe('objectPath', function () {
 
     it('should delete deep paths', function () {
       var obj = getTestObj();
-
-      expect(objectPath.del(obj)).to.be.equal(obj);
 
       objectPath.set(obj, 'b.g.1.0', 'test');
       objectPath.set(obj, 'b.g.1.1', 'test');
@@ -618,15 +636,20 @@ describe('objectPath', function () {
   });
 
   describe('has', function () {
-    it('should return false for empty object', function () {
-      expect(objectPath.has({}, 'a')).to.be.equal(false);
+    it('should throw for empty object', function () {
+      expect(function(){
+        objectPath.has({}, 'a');
+      }).to.throw();
     });
 
-    it('should return false for empty path', function () {
+    it('should throw for empty path', function () {
       var obj = getTestObj();
-      expect(objectPath.has(obj, '')).to.be.equal(false);
-      expect(objectPath.has(obj, [])).to.be.equal(false);
-      expect(objectPath.has(obj, [''])).to.be.equal(false);
+      expect(function(){
+        objectPath.has(obj, '');
+      }).to.throw();
+      expect(function(){
+        objectPath.has(obj, []);
+      }).to.throw();
     });
 
     it('should test under shallow object', function () {
@@ -675,7 +698,9 @@ describe('objectPath', function () {
 
     it('should distinct nonexistent key and key = undefined', function () {
       var obj = {};
-      expect(objectPath.has(obj, 'key')).to.be.equal(false);
+      expect(function(){
+        objectPath.has(obj, 'key');
+      }).to.throw();
 
       obj.key = undefined;
       expect(objectPath.has(obj, 'key')).to.be.equal(true);
@@ -813,8 +838,6 @@ describe('objectPath', function () {
       var obj = getTestObj();
       var model = objectPath.bind(obj);
 
-      expect(model.del()).to.be.equal(obj);
-
       model.set('b.g.1.0', 'test');
       model.set('b.g.1.1', 'test');
       model.set('b.h.az', 'test');
@@ -929,7 +952,15 @@ describe('objectPath', function () {
           expect(objectPath.isEmpty({})).to.equal(true);
           expect(objectPath.isEmpty([])).to.equal(true);
           expect(objectPath.isEmpty([1])).to.equal(false);
+          expect(objectPath.isEmpty(1)).to.equal(false);
+          expect(objectPath.isEmpty(0)).to.equal(false);
+          expect(objectPath.isEmpty('0')).to.equal(false);
+          expect(objectPath.isEmpty('1')).to.equal(false);
+          expect(objectPath.isEmpty(function(){ })).to.equal(true);
           expect(objectPath.isEmpty('')).to.equal(true);
+          if (typeof Symbol === 'function') {
+            expect(objectPath.isEmpty(Symbol())).to.equal(false);
+          }
         });
 
       });
@@ -987,9 +1018,7 @@ describe('objectPath', function () {
           expect(objectPath.isObject('asdfa')).to.equal(false);
           expect(objectPath.isObject(null)).to.equal(false);
           expect(objectPath.isObject(void 0)).to.equal(false);
-          expect(objectPath.isObject(function () {
-
-          })).to.equal(false);
+          expect(objectPath.isObject(function () { })).to.equal(false);
         });
 
       })
@@ -1060,6 +1089,26 @@ describe('objectPath', function () {
       });
 
     }
+
+    describe('ObjectPathError', function(){
+
+      it('inherits from Error and ReferenceError', function(){
+
+        expect(function(){
+          throw new objectPath.ObjectPathError('test');
+        }).to.throw().and.be.instanceof(Error);
+
+        expect(function(){
+          throw new objectPath.ObjectPathError('test');
+        }).to.throw().and.be.instanceof(ReferenceError);
+
+        expect(function(){
+          throw new objectPath.ObjectPathError('test');
+        }).to.throw().and.be.instanceof(objectPath.ObjectPathError);
+
+      });
+
+    });
 
   });
 
