@@ -534,6 +534,36 @@ describe('insert', function(){
   });
 });
 
+describe('filter', function () {
+  it('should return filtered object given null path', function () {
+    var obj = getTestObj();
+    expect(objectPath.filter(obj, null, 'a')).to.deep.equal({ a: 'b' });
+    expect(objectPath.filter(obj, null, ['a'])).to.deep.equal({ a: 'b' });
+    expect(objectPath.filter(obj, '', 'a')).to.deep.equal({ a: 'b' });
+    expect(objectPath.filter(obj, '', ['a'])).to.deep.equal({ a: 'b' });
+  })
+
+  it('should return filtered object given path', function() {
+    var obj = getTestObj();
+    expect(objectPath.filter(obj, 'b', ['d', 'f'])).to.deep.equal({ d: ['a', 'b'], f: 'i' });
+  })
+
+  it('should return undefined given invalid path', function() {
+    var obj = getTestObj();
+    expect(objectPath.filter(obj, 'nope', ['dog', 'cat'])).to.equal(void 0);
+  })
+
+  it('should return empty object given unmatched keys', function() {
+    var obj = getTestObj();
+    expect(objectPath.filter(obj, 'b', ['dog', 'cat'])).to.deep.equal({});
+  })
+
+  it('should return object with default values given unmatched keys and default value', function() {
+    var obj = getTestObj();
+    expect(objectPath.filter(obj, 'b', ['dog', 'cat'], 42)).to.deep.equal({ dog: 42, cat: 42 });
+  })
+})
+
 describe('has', function () {
   it('should return false for empty object', function () {
     expect(objectPath.has({}, 'a')).to.be.equal(false);

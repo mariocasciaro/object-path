@@ -41,6 +41,11 @@ var obj = {
     c: ["e", "f"],
     '\u1200': 'unicode key',
     'dot.dot': 'key'
+  },
+  g: {
+    h: "k",
+    i: 42,
+    j: ["l", "m"]
   }
 };
 
@@ -92,6 +97,9 @@ objectPath.del(obj, ["a","c",0]); // obj.a.c is now ['f']
 //tests path existence
 objectPath.has(obj, "a.b"); // true
 objectPath.has(obj, ["a","d"]); // false
+
+//filter a path
+objectPath.filter(obj, "g", ["i", "j"]); // returns {i: 42, j: ["l", "m"]}
 
 //bind object
 var model = objectPath({
