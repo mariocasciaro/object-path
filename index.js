@@ -275,5 +275,31 @@
     return del(obj, path);
   };
 
+  objectPath.filter = function(obj, path, keys, defaultValue) {
+    var newObj = objectPath.get(obj, path);
+
+    if (isEmpty(newObj)) {
+      return newObj;
+    }
+
+    if (!isArray(keys)) {
+      keys = [keys];
+    }
+
+    var hasDefault = arguments.length > 3;
+
+    var filteredObj = keys.reduce(function(proxy, prop) {
+      if (newObj[prop] !== void 0) {
+        proxy[prop] = newObj[prop];
+      } else if (hasDefault) {
+        proxy[prop] = defaultValue;
+      }
+
+      return proxy;
+    }, {});
+
+    return filteredObj;
+  };
+
   return objectPath;
 });
