@@ -18,7 +18,7 @@ Access deep properties using a path
 
 * Improved performance of `get`, `set`, and `push` by 2x-3x
 * Introduced a benchmarking test suite
-* **BREAKING CHANGE**: `del` will not delete not-own properties
+* **BREAKING CHANGE**: `del`, `empty`, `set` will not affect not-own object's properties
 
 ## Install
 
