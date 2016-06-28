@@ -11,6 +11,15 @@ Access deep properties using a path
 [![devDependency Status](https://david-dm.org/mariocasciaro/object-path/dev-status.svg)](https://david-dm.org/mariocasciaro/object-path#info=devDependencies)
 ![Downloads](http://img.shields.io/npm/dm/object-path.svg)
 
+
+## Changelog
+
+### 0.10.0
+
+* Improved performance of `get`, `set`, and `push` by 2x-3x
+* Introduced a benchmarking test suite
+* **BREAKING CHANGE**: `del` will not delete not-own properties
+
 ## Install
 
 ### Node.js
@@ -108,6 +117,9 @@ model.del("a.b"); // obj.a.b is now undefined
 model.has("a.b"); // false
 
 ```
+### Notes
+
+`object-path` is intentionally designed to access only an object's own properties
 
 ### Immutability
 

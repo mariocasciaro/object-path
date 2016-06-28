@@ -64,7 +64,7 @@
     if (typeof path === 'number') {
       path = [path];
     }
-    if (isEmpty(path)) {
+    if (!path || path.length === 0) {
       return obj;
     }
     if (typeof path === 'string') {

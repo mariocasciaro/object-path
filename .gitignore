@@ -4,3 +4,4 @@ node_modules
 npm-debug.log
 generated
 coverage
+.DS_Store

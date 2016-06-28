@@ -13,6 +13,8 @@ var testObj = {
   }
 }
 
+var testObj2
+
 benchmark
   .add('get existing', {
     iterations: 100000,
@@ -30,6 +32,21 @@ benchmark
     iterations: 100000,
     fn: function() {
       op.push(testObj, ['level1_a', 'level2_a', 'level3_a', 'level4_a', 'level5_a'], 'val')
+    }
+  })
+  .add('set non existing', {
+    iterations: 100000,
+    fn: function() {
+      op.set(testObj2, ['level1_a', 'level2_b', 'level3_b', 'level4_b', 'level5_b'], 'val')
+    },
+    beforeEach: function() {
+      testObj2 = {}
+    }
+  })
+  .add('set existing', {
+    iterations: 100000,
+    fn: function() {
+      op.set(testObj, ['level1_a', 'level2_a', 'level3_a', 'level4_a', 'level5_b'], 'val')
     }
   })
   .run()
