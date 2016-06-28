@@ -97,7 +97,12 @@ describe('get', function() {
     expect(objectPath.get({  }, ['1'])).to.be.equal(undefined);
   });
 
-  it('should skip non own properties with isEmpty', function(){
+  it('should return the default value when object is null or undefined', function() {
+    expect(objectPath.get(null, 'test', 'a')).to.be.deep.equal('a');
+    expect(objectPath.get(undefined, 'test', 'a')).to.be.deep.equal('a');
+  });
+
+  it('should skip non own properties', function() {
     var Base = function(enabled){ };
     Base.prototype = {
       one: {
@@ -115,6 +120,7 @@ describe('get', function() {
     extended.enabled = true;
 
     expect(objectPath.get(extended, 'enabled')).to.be.equal(true);
+    expect(objectPath.get(extended, 'one')).to.be.equal(undefined);
   });
 });
 
@@ -401,7 +407,8 @@ describe('empty', function(){
     expect(obj.object.sub).to.deep.equal({});
 
     objectPath.empty(obj, 'instance.test');
-    expect(obj.instance.test).to.equal(null);
+    //instance.test is not own property, so it shouldn't be emptied
+    expect(obj.instance.test).to.be.a('function');
     expect(Instance.prototype.test).to.be.a('function');
 
     objectPath.empty(obj, 'string');
@@ -693,7 +700,8 @@ describe('bind object', function () {
     expect(obj.object.sub).to.deep.equal({});
 
     model.empty('instance.test');
-    expect(obj.instance.test).to.equal(null);
+    //instance.test is not own property so it shouldn't be emptied
+    expect(obj.instance.test).to.be.a('function');
     expect(Instance.prototype.test).to.be.a('function');
 
     model.empty('string');

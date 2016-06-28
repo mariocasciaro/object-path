@@ -24,7 +24,7 @@
     }
     if (isArray(value) && value.length === 0) {
         return true;
-    } else if (!isString(value)) {
+    } else if (typeof value !== 'string') {
         for (var i in value) {
             if (_hasOwnProperty.call(value, i)) {
                 return false;
@@ -39,19 +39,12 @@
     return toStr.call(type);
   }
 
-  function isNumber(value){
-    return typeof value === 'number' || toString(value) === "[object Number]";
-  }
-
-  function isString(obj){
-    return typeof obj === 'string' || toString(obj) === "[object String]";
-  }
-
   function isObject(obj){
     return typeof obj === 'object' && toString(obj) === "[object Object]";
   }
 
   var isArray = Array.isArray || function(obj){
+    /*istanbul ignore next:cant test*/
     return toStr.call(obj) === '[object Array]';
   }
 
@@ -68,13 +61,13 @@
   }
 
   function set(obj, path, value, doNotReplace){
-    if (isNumber(path)) {
+    if (typeof path === 'number') {
       path = [path];
     }
     if (isEmpty(path)) {
       return obj;
     }
-    if (isString(path)) {
+    if (typeof path === 'string') {
       return set(obj, path.split('.').map(getKey), value, doNotReplace);
     }
     var currentPath = path[0];
@@ -89,7 +82,7 @@
 
     if (obj[currentPath] === void 0) {
       //check if we assume an array
-      if(isNumber(path[1])) {
+      if(typeof path[1] === 'number') {
         obj[currentPath] = [];
       } else {
         obj[currentPath] = {};
@@ -100,7 +93,7 @@
   }
 
   function del(obj, path) {
-    if (isNumber(path)) {
+    if (typeof path === 'number') {
       path = [path];
     }
 
@@ -111,7 +104,7 @@
     if (isEmpty(path)) {
       return obj;
     }
-    if(isString(path)) {
+    if(typeof path === 'string') {
       return del(obj, path.split('.'));
     }
 
@@ -151,9 +144,9 @@
       return false;
     }
 
-    if (isNumber(path)) {
+    if (typeof path === 'number') {
       path = [path];
-    } else if (isString(path)) {
+    } else if (typeof path === 'string') {
       path = path.split('.');
     }
 
@@ -204,11 +197,11 @@
       return obj;
     }
 
-    if (isString(value)) {
+    if (typeof value === 'string') {
       return objectPath.set(obj, path, '');
     } else if (isBoolean(value)) {
       return objectPath.set(obj, path, false);
-    } else if (isNumber(value)) {
+    } else if (typeof value === 'number') {
       return objectPath.set(obj, path, 0);
     } else if (isArray(value)) {
       value.length = 0;
@@ -246,26 +239,30 @@
   };
 
   objectPath.get = function (obj, path, defaultValue){
-    if (isNumber(path)) {
+    if (typeof path === 'number') {
       path = [path];
     }
-    if (isEmpty(path)) {
+    if (!path || path.length === 0) {
       return obj;
     }
-    if (isEmpty(obj)) {
+    if (obj == null) {
       return defaultValue;
     }
-    if (isString(path)) {
+    if (typeof path === 'string') {
       return objectPath.get(obj, path.split('.'), defaultValue);
     }
 
     var currentPath = getKey(path[0]);
+    var nextObj
+    if((typeof currentPath === 'number' && Array.isArray(obj)) || obj.hasOwnProperty(currentPath)) {
+      nextObj = obj[currentPath]
+    }
+    if (nextObj === void 0) {
+      return defaultValue;
+    }
 
     if (path.length === 1) {
-      if (obj[currentPath] === void 0) {
-        return defaultValue;
-      }
-      return obj[currentPath];
+      return nextObj;
     }
 
     return objectPath.get(obj[currentPath], path.slice(1), defaultValue);
