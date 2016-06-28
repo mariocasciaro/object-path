@@ -179,6 +179,11 @@ describe('set', function() {
     obj = getTestObj();
     objectPath.set(obj, ['b','e',1,'g'], 'f');
     expect(obj).to.have.deep.property('b.e.1.g', 'f');
+
+    obj = {}
+    objectPath.set(obj, 'b.0', 'a');
+    objectPath.set(obj, 'b.1', 'b');
+    expect(obj.b).to.be.deep.equal(['a', 'b']);
   });
 
   it('should create intermediate objects', function() {
@@ -365,11 +370,11 @@ describe('empty', function(){
     var obj = {};
     expect(objectPath.empty()).to.equal(void 0);
     expect(objectPath.empty(obj, 'path')).to.equal(void 0);
-    expect(objectPath.empty(obj, '')).to.equal(obj);
+    expect(objectPath.empty(obj, '')).to.equal(void 0);
 
     obj.path = true;
 
-    expect(objectPath.empty(obj, 'inexistant')).to.equal(obj);
+    expect(objectPath.empty(obj, 'inexistant')).to.equal(void 0);
   });
 
   it('should empty each path according to their types', function(){
@@ -431,10 +436,6 @@ describe('empty', function(){
 });
 
 describe('del', function(){
-  it('should return undefined on empty object', function(){
-    expect(objectPath.del({}, 'a')).to.equal(void 0);
-  });
-
   it('should work with number path', function(){
     var obj = getTestObj();
     objectPath.del(obj.b.d, 1);
@@ -489,13 +490,6 @@ describe('del', function(){
     objectPath.del(obj, 'b.d.0');
     expect(obj.b.d).to.have.length(0);
     expect(obj.b.d).to.be.deep.equal([]);
-  });
-
-  it('should skip undefined paths', function(){
-    var obj = getTestObj();
-
-    expect(objectPath.del(obj, 'do.not.exist')).to.be.equal(obj);
-    expect(objectPath.del(obj, 'a.c')).to.be.equal('b');
   });
 });
 
@@ -578,9 +572,15 @@ describe('has', function () {
   });
 
   it('should test value under array', function() {
-    var obj = getTestObj();
-    expect(objectPath.has(obj, 'b.d.0')).to.be.equal(true);
-    expect(objectPath.has(obj, ['b','d',0])).to.be.equal(true);
+    var obj = {
+      b: ['a']
+    };
+    obj.b[3] = {o: 'a'}
+    expect(objectPath.has(obj, 'b.0')).to.be.equal(true);
+    expect(objectPath.has(obj, 'b.1')).to.be.equal(true);
+    expect(objectPath.has(obj, 'b.3.o')).to.be.equal(true);
+    expect(objectPath.has(obj, 'b.3.qwe')).to.be.equal(false);
+    expect(objectPath.has(obj, 'b.4')).to.be.equal(false);
   });
 
   it('should test the value under array deep', function() {
@@ -770,5 +770,118 @@ describe('bind object', function () {
     expect(model.has('z')).to.be.equal(false);
     expect(model.has(['z'])).to.be.equal(false);
   });
+});
 
+describe('Don\' access not own properties [default]', function () {
+  it('should not get a not own property', function() {
+    var Obj = function() {};
+    Obj.prototype.notOwn = {a: 'a'};
+    var obj = new Obj();
+
+    expect(objectPath.get(obj, 'notOwn')).to.be.undefined
+  });
+
+  it('should set a not own property on the instance (not the prototype)', function() {
+    var proto = {
+      notOwn: {}
+    }
+    var obj = Object.create(proto)
+
+    objectPath.set(obj, 'notOwn.test', 'a');
+    expect(obj.notOwn.test).to.be.equal('a');
+    expect(proto.notOwn).to.be.deep.equal({});
+  });
+
+  it('has should return false on a not own property', function() {
+    var proto = {
+      notOwn: {a: 'a'}
+    }
+    var obj = Object.create(proto)
+
+
+    expect(objectPath.has(obj, 'notOwn')).to.be.false;
+    expect(objectPath.has(obj, 'notOwn.a')).to.be.false;
+  });
+
+  it('empty should not empty on a not own property', function() {
+    var proto = {
+      notOwn: {a: 'a'}
+    }
+    var obj = Object.create(proto);
+
+    objectPath.empty(obj, 'notOwn');
+    expect(proto.notOwn).to.be.deep.equal({a: 'a'});
+    expect(obj.notOwn).to.be.deep.equal({a: 'a'});
+  });
+
+  it('del should not delete not own property', function() {
+    var proto = {
+      notOwn: {a: 'a'}
+    }
+    var obj = Object.create(proto);
+
+    objectPath.del(obj, 'notOwn.a');
+    expect(proto.notOwn).to.be.deep.equal({a: 'a'});
+    //expect(obj.notOwn).to.be.deep.equal({a: 'a'});
+    //objectPath.del(obj, 'notOwn');
+    //expect(proto).to.be.deep.equal({notOwn: {a: 'a'}});
+    //expect(obj).to.be.deep.equal({notOwn: {a: 'a'}});
+  });
+});
+
+describe('Access own properties [optional]', function () {
+  it('should get a not own property', function() {
+    var Obj = function() {};
+    Obj.prototype.notOwn = {a: 'a'};
+    var obj = new Obj();
+
+    expect(objectPath.withOwnProperties.get(obj, 'notOwn.a')).to.be.equal('a')
+  });
+
+  it('should set a deep not own property on the prototype (if exists)', function() {
+    var proto = {
+      notOwn: {}
+    }
+    var obj = Object.create(proto)
+
+    objectPath.withOwnProperties.set(obj, 'notOwn.test', 'a');
+    expect(obj.notOwn.test).to.be.equal('a');
+    expect(proto.notOwn).to.be.deep.equal({test: 'a'});
+  });
+
+
+  it('has should return true on a not own property', function() {
+    var proto = {
+      notOwn: {a: 'a'}
+    }
+    var obj = Object.create(proto)
+
+    expect(objectPath.withOwnProperties.has(obj, 'notOwn')).to.be.true;
+    expect(objectPath.withOwnProperties.has(obj, 'notOwn.a')).to.be.true;
+  });
+
+  it('empty should empty a not own property', function() {
+    var proto = {
+      notOwn: {a: 'a'}
+    }
+    var obj = Object.create(proto);
+
+    objectPath.withOwnProperties.empty(obj, 'notOwn');
+    expect(proto.notOwn).to.be.deep.equal({});
+    expect(obj.notOwn).to.be.deep.equal({});
+  });
+
+  it('del should delete a not own property', function() {
+    var proto = {
+      notOwn: {a: 'a'}
+    }
+    var obj = Object.create(proto);
+
+    objectPath.withOwnProperties.del(obj, 'notOwn.a');
+    expect(proto.notOwn).to.be.deep.equal({});
+    //expect(obj.notOwn).to.be.deep.equal({});
+    objectPath.withOwnProperties.del(obj, 'notOwn');
+    //expect(proto).to.be.deep.equal({notOwn: {}});
+    //expect(obj).to.be.deep.equal({notOwn: {}});
+  });
 });
