@@ -128,16 +128,17 @@ model.has("a.b"); // false
 By default `object-path` will only access an object's own properties. Look at the following example:
 
 ```javascript
-var Obj = function() {};
-Obj.prototype.notOwn = {prop: 'a'};
-var obj = new Obj();
+var proto = {
+  notOwn: {prop: 'a'}
+}
+var obj = Object.create(proto);
 
 //This will return undefined (or the default value you specified), because notOwn is
 //an inherited property
 objectPath.get(obj, 'notOwn.prop');
 
 //This will set the property on the obj instance and not the prototype.
-//In other words Obj.notOwn.prop === 'a' and obj.notOwn.prop === 'b'
+//In other words proto.notOwn.prop === 'a' and obj.notOwn.prop === 'b'
 objectPath.set(obj, 'notOwn.prop', 'b');
 ```
 To configure `object-path` to also deal with inherited properties, you need to create a new instance and specify
@@ -156,14 +157,15 @@ var objectPathWithInheritedProps = objectPath.withInheritedProps
 
 Once you have the new instance, you can access inherited properties as you access other properties:
 ```javascript
-var Obj = function() {};
-Obj.prototype.notOwn = {prop: 'a'};
-var obj = new Obj();
+var proto = {
+  notOwn: {prop: 'a'}
+}
+var obj = Object.create(proto);
 
 //This will return 'a'
 objectPath.withInheritedProps.get(obj, 'notOwn.prop');
 
-//This will set Obj.notOwn.prop to 'b'
+//This will set proto.notOwn.prop to 'b'
 objectPath.set(obj, 'notOwn.prop', 'b');
 ```
 
