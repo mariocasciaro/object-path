@@ -79,7 +79,7 @@
     };
 
     function getShallowProperty(obj, prop) {
-      if(options.includeOwnProperties || (typeof prop === 'number' && Array.isArray(obj)) || obj.hasOwnProperty(prop)) {
+      if(options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || obj.hasOwnProperty(prop)) {
         return obj[prop];
       }
     }
@@ -133,7 +133,7 @@
       for (var i = 0; i < path.length; i++) {
         var j = getKey(path[i]);
         if((typeof j === 'number' && isArray(obj) && j < obj.length) ||
-          (options.includeOwnProperties ? (j in Object(obj)) : _hasOwnProperty.call(obj, j))) {
+          (options.includeInheritedProps ? (j in Object(obj)) : _hasOwnProperty.call(obj, j))) {
           obj = obj[j];
         } else {
           return false;
@@ -284,6 +284,6 @@
 
   var mod = factory();
   mod.create = factory;
-  mod.withOwnProperties = factory({includeOwnProperties: true})
+  mod.withInheritedProps = factory({includeInheritedProps: true})
   return mod;
 });

@@ -14,11 +14,17 @@ Access deep properties using a path
 
 ## Changelog
 
+### 0.11.0
+
+* Introduce ability to specify options and create new instances of `object-path`
+* Introduce option to control the way `object-path` deals with inherited properties (`includeInheritedProps`)
+* New default `object-path` instance already configured to handle not-own object properties (`withInheritedProps`)
+
 ### 0.10.0
 
 * Improved performance of `get`, `set`, and `push` by 2x-3x
 * Introduced a benchmarking test suite
-* **BREAKING CHANGE**: `del`, `empty`, `set` will not affect not-own object's properties
+* **BREAKING CHANGE**: `del`, `empty`, `set` will not affect not-own object's properties (made them consistent with the other methods)
 
 ## Install
 
@@ -117,9 +123,49 @@ model.del("a.b"); // obj.a.b is now undefined
 model.has("a.b"); // false
 
 ```
-### Notes
+### How `object-path` deals with inherited properties
 
-`object-path` is intentionally designed to access only an object's own properties
+By default `object-path` will only access an object's own properties. Look at the following example:
+
+```javascript
+var Obj = function() {};
+Obj.prototype.notOwn = {prop: 'a'};
+var obj = new Obj();
+
+//This will return undefined (or the default value you specified), because notOwn is
+//an inherited property
+objectPath.get(obj, 'notOwn.prop');
+
+//This will set the property on the obj instance and not the prototype.
+//In other words Obj.notOwn.prop === 'a' and obj.notOwn.prop === 'b'
+objectPath.set(obj, 'notOwn.prop', 'b');
+```
+To configure `object-path` to also deal with inherited properties, you need to create a new instance and specify
+the `includeInheritedProps = true` in the options object:
+
+```javascript
+var objectPath = require("object-path");
+var objectPathWithInheritedProps = objectPath.create({includeInheritedProps: true})
+```
+
+Alternatively, `object-path` exposes an instance already configured to handle inherited properties (`objectPath.withInheritedProps`):
+```javascript
+var objectPath = require("object-path");
+var objectPathWithInheritedProps = objectPath.withInheritedProps
+```
+
+Once you have the new instance, you can access inherited properties as you access other properties:
+```javascript
+var Obj = function() {};
+Obj.prototype.notOwn = {prop: 'a'};
+var obj = new Obj();
+
+//This will return 'a'
+objectPath.withInheritedProps.get(obj, 'notOwn.prop');
+
+//This will set Obj.notOwn.prop to 'b'
+objectPath.set(obj, 'notOwn.prop', 'b');
+```
 
 ### Immutability
 

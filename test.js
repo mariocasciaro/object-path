@@ -835,7 +835,7 @@ describe('Access own properties [optional]', function () {
     Obj.prototype.notOwn = {a: 'a'};
     var obj = new Obj();
 
-    expect(objectPath.withOwnProperties.get(obj, 'notOwn.a')).to.be.equal('a')
+    expect(objectPath.withInheritedProps.get(obj, 'notOwn.a')).to.be.equal('a')
   });
 
   it('should set a deep not own property on the prototype (if exists)', function() {
@@ -844,7 +844,7 @@ describe('Access own properties [optional]', function () {
     }
     var obj = Object.create(proto)
 
-    objectPath.withOwnProperties.set(obj, 'notOwn.test', 'a');
+    objectPath.withInheritedProps.set(obj, 'notOwn.test', 'a');
     expect(obj.notOwn.test).to.be.equal('a');
     expect(proto.notOwn).to.be.deep.equal({test: 'a'});
   });
@@ -856,8 +856,8 @@ describe('Access own properties [optional]', function () {
     }
     var obj = Object.create(proto)
 
-    expect(objectPath.withOwnProperties.has(obj, 'notOwn')).to.be.true;
-    expect(objectPath.withOwnProperties.has(obj, 'notOwn.a')).to.be.true;
+    expect(objectPath.withInheritedProps.has(obj, 'notOwn')).to.be.true;
+    expect(objectPath.withInheritedProps.has(obj, 'notOwn.a')).to.be.true;
   });
 
   it('empty should empty a not own property', function() {
@@ -866,7 +866,7 @@ describe('Access own properties [optional]', function () {
     }
     var obj = Object.create(proto);
 
-    objectPath.withOwnProperties.empty(obj, 'notOwn');
+    objectPath.withInheritedProps.empty(obj, 'notOwn');
     expect(proto.notOwn).to.be.deep.equal({});
     expect(obj.notOwn).to.be.deep.equal({});
   });
@@ -877,10 +877,10 @@ describe('Access own properties [optional]', function () {
     }
     var obj = Object.create(proto);
 
-    objectPath.withOwnProperties.del(obj, 'notOwn.a');
+    objectPath.withInheritedProps.del(obj, 'notOwn.a');
     expect(proto.notOwn).to.be.deep.equal({});
     //expect(obj.notOwn).to.be.deep.equal({});
-    objectPath.withOwnProperties.del(obj, 'notOwn');
+    objectPath.withInheritedProps.del(obj, 'notOwn');
     //expect(proto).to.be.deep.equal({notOwn: {}});
     //expect(obj).to.be.deep.equal({notOwn: {}});
   });
