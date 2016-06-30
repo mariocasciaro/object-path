@@ -102,6 +102,17 @@ describe('get', function() {
     expect(objectPath.get(undefined, 'test', 'a')).to.be.deep.equal('a');
   });
 
+  it(
+    'should not fail on an object with a null prototype',
+    function assertSuccessForObjWithNullProto(){
+      // TODO: verify this works on node 0.10
+      var foo = 'FOO';
+      var objWithNullProto = Object.create(null);
+      objWithNullProto.foo = foo;
+      expect(objectPath.get(objWithNullProto, 'foo')).to.equal(foo);
+    }
+  );
+
   it('should skip non own properties', function() {
     var Base = function(enabled){ };
     Base.prototype = {
@@ -772,7 +783,7 @@ describe('bind object', function () {
   });
 });
 
-describe('Don\' access not own properties [default]', function () {
+describe('Don\'t access not own properties [default]', function () {
   it('should not get a not own property', function() {
     var Obj = function() {};
     Obj.prototype.notOwn = {a: 'a'};
