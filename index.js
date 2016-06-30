@@ -79,7 +79,7 @@
     };
 
     function getShallowProperty(obj, prop) {
-      if(options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || obj.hasOwnProperty(prop)) {
+      if (options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || _hasOwnProperty.call(obj, prop)) {
         return obj[prop];
       }
     }
