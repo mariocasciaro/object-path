@@ -105,7 +105,6 @@ describe('get', function() {
   it(
     'should not fail on an object with a null prototype',
     function assertSuccessForObjWithNullProto(){
-      // TODO: verify this works on node 0.10
       var foo = 'FOO';
       var objWithNullProto = Object.create(null);
       objWithNullProto.foo = foo;
