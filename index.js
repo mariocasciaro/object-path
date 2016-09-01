@@ -14,9 +14,14 @@
 })(this, function(){
   'use strict';
 
-  var
-    toStr = Object.prototype.toString,
-    _hasOwnProperty = Object.prototype.hasOwnProperty;
+  var toStr = Object.prototype.toString;
+  function hasOwnProperty(obj, prop) {
+    if(obj == null) {
+      return false
+    }
+    //to handle objects with null prototypes (too edge case?)
+    return Object.prototype.hasOwnProperty.call(obj, prop)
+  }
 
   function isEmpty(value){
     if (!value) {
@@ -26,7 +31,7 @@
         return true;
     } else if (typeof value !== 'string') {
         for (var i in value) {
-            if (_hasOwnProperty.call(value, i)) {
+            if (hasOwnProperty(value, i)) {
                 return false;
             }
         }
@@ -79,7 +84,7 @@
     };
 
     function getShallowProperty(obj, prop) {
-      if (options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || _hasOwnProperty.call(obj, prop)) {
+      if (options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || hasOwnProperty(obj, prop)) {
         return obj[prop];
       }
     }
@@ -116,10 +121,6 @@
     }
 
     objectPath.has = function (obj, path) {
-      if (obj == null) {
-        return false;
-      }
-
       if (typeof path === 'number') {
         path = [path];
       } else if (typeof path === 'string') {
@@ -127,13 +128,14 @@
       }
 
       if (!path || path.length === 0) {
-        return false;
+        return !!obj;
       }
 
       for (var i = 0; i < path.length; i++) {
         var j = getKey(path[i]);
+
         if((typeof j === 'number' && isArray(obj) && j < obj.length) ||
-          (options.includeInheritedProps ? (j in Object(obj)) : _hasOwnProperty.call(obj, j))) {
+          (options.includeInheritedProps ? (j in Object(obj)) : hasOwnProperty(obj, j))) {
           obj = obj[j];
         } else {
           return false;
@@ -184,7 +186,7 @@
         value.length = 0;
       } else if (isObject(value)) {
         for (i in value) {
-          if (_hasOwnProperty.call(value, i)) {
+          if (hasOwnProperty(value, i)) {
             delete value[i];
           }
         }

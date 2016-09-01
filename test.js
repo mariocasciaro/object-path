@@ -550,11 +550,16 @@ describe('has', function () {
     expect(objectPath.has({}, 'a')).to.be.equal(false);
   });
 
-  it('should return false for empty path', function () {
+  it('should handle empty paths properly', function () {
     var obj = getTestObj();
     expect(objectPath.has(obj, '')).to.be.equal(false);
-    expect(objectPath.has(obj, [])).to.be.equal(false);
     expect(objectPath.has(obj, [''])).to.be.equal(false);
+    obj[''] = 1
+    expect(objectPath.has(obj, '')).to.be.equal(true);
+    expect(objectPath.has(obj, [''])).to.be.equal(true);
+
+    expect(objectPath.has(obj, [])).to.be.equal(true);
+    expect(objectPath.has(null, [])).to.be.equal(false);
   });
 
   it('should test under shallow object', function() {
@@ -613,6 +618,17 @@ describe('has', function () {
 
     obj.key = undefined;
     expect(objectPath.has(obj, 'key')).to.be.equal(true);
+  });
+
+  it('should work with deep undefined/null values', function() {
+    var obj = {};
+    expect(objectPath.has(obj, 'missing.test')).to.be.equal(false);
+
+    obj.missing = null;
+    expect(objectPath.has(obj, 'missing.test')).to.be.equal(false);
+
+    obj.sparseArray = [1, undefined, 3]
+    expect(objectPath.has(obj, 'sparseArray.1.test')).to.be.equal(false);
   });
 });
 
