@@ -43,7 +43,7 @@ bower install object-path --save
 ### Typescript typings
 
 ```
-tsd query object-path --action install --save
+typings install --save dt~object-path
 ```
 
 ## Usage
