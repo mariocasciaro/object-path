@@ -66,6 +66,11 @@ describe('get', function() {
     expect(objectPath.get(obj, ['b','e',1,'f'])).to.be.equal('g');
   });
 
+  it('should return the array length', function() {
+    var obj = getTestObj();
+    expect(objectPath.get(obj, 'b.c.length')).to.be.equal(0);
+  });
+
   it('should return undefined for missing values under object', function() {
     var obj = getTestObj();
     expect(objectPath.get(obj, 'a.b')).to.not.exist;
