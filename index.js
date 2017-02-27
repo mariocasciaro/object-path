@@ -1,4 +1,4 @@
-(function (root, factory){
+(function (global, factory){
   'use strict';
 
   /*istanbul ignore next:cant test*/
@@ -9,9 +9,9 @@
     define([], factory);
   } else {
     // Browser globals
-    root.objectPath = factory();
+    global.objectPath = factory();
   }
-})(this, function(){
+})(this || window, function(){
   'use strict';
 
   var toStr = Object.prototype.toString;
