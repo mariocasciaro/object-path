@@ -83,8 +83,12 @@
       }, {});
     };
 
+    function hasShallowProperty(obj, prop) {
+      return (options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || hasOwnProperty(obj, prop))
+    }
+
     function getShallowProperty(obj, prop) {
-      if (options.includeInheritedProps || (typeof prop === 'number' && Array.isArray(obj)) || hasOwnProperty(obj, prop)) {
+      if (hasShallowProperty(obj, prop)) {
         return obj[prop];
       }
     }
@@ -186,7 +190,7 @@
         value.length = 0;
       } else if (isObject(value)) {
         for (i in value) {
-          if (hasOwnProperty(value, i)) {
+          if (hasShallowProperty(value, i)) {
             delete value[i];
           }
         }
@@ -261,9 +265,8 @@
       }
 
       var currentPath = getKey(path[0]);
-      var currentVal = getShallowProperty(obj, currentPath);
-      if(currentVal == null) {
-        return currentVal;
+      if (!hasShallowProperty(obj, currentPath)) {
+        return obj;
       }
 
       if(path.length === 1) {
@@ -273,9 +276,7 @@
           delete obj[currentPath];
         }
       } else {
-        if (obj[currentPath] !== void 0) {
-          return objectPath.del(obj[currentPath], path.slice(1));
-        }
+        return objectPath.del(obj[currentPath], path.slice(1));
       }
 
       return obj;

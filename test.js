@@ -385,6 +385,9 @@ describe('empty', function(){
     obj.path = true;
 
     expect(objectPath.empty(obj, 'inexistant')).to.equal(void 0);
+
+    expect(objectPath.empty(null, 'path')).to.equal(void 0);
+    expect(objectPath.empty(void 0, 'path')).to.equal(void 0);
   });
 
   it('should empty each path according to their types', function(){
@@ -407,7 +410,9 @@ describe('empty', function(){
           some:'property',
           sub: {
             'property': true
-          }
+          },
+          nullProp: null,
+          undefinedProp: void 0
         },
         instance: new Instance()
       };
@@ -420,6 +425,17 @@ describe('empty', function(){
 
     objectPath.empty(obj, 'object.sub');
     expect(obj.object.sub).to.deep.equal({});
+
+    objectPath.empty(obj, 'object.nullProp');
+    expect(obj.object.nullProp).to.equal(null);
+
+    objectPath.empty(obj, 'object.undefinedProp');
+    expect(obj.object.undefinedProp).to.equal(void 0);
+    expect(obj.object).to.have.property('undefinedProp');
+
+    objectPath.empty(obj, 'object.notAProp');
+    expect(obj.object.notAProp).to.equal(void 0);
+    expect(obj.object).to.not.have.property('notAProp');
 
     objectPath.empty(obj, 'instance.test');
     //instance.test is not own property, so it shouldn't be emptied
@@ -450,6 +466,24 @@ describe('del', function(){
     var obj = getTestObj();
     objectPath.del(obj.b.d, 1);
     expect(obj.b.d).to.deep.equal(['a']);
+  });
+
+  it('should remove null and undefined props (but not explode on nested)', function(){
+    var obj = { nullProp: null, undefinedProp: void 0 };
+    expect(obj).to.have.property('nullProp');
+    expect(obj).to.have.property('undefinedProp');
+
+    objectPath.del(obj, 'nullProp.foo');
+    objectPath.del(obj, 'undefinedProp.bar');
+    expect(obj).to.have.property('nullProp');
+    expect(obj).to.have.property('undefinedProp');
+    expect(obj).to.deep.equal({ nullProp: null, undefinedProp: void 0 });
+
+    objectPath.del(obj, 'nullProp');
+    objectPath.del(obj, 'undefinedProp');
+    expect(obj).to.not.have.property('nullProp');
+    expect(obj).to.not.have.property('undefinedProp');
+    expect(obj).to.deep.equal({});
   });
 
   it('should delete deep paths', function(){
