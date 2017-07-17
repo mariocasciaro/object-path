@@ -124,6 +124,24 @@
       return set(obj[currentPath], path.slice(1), value, doNotReplace);
     }
 
+    /**
+     * Modifies an existing value using a provided function
+     * @param  {Object}       obj                   The object to modify
+     * @param  {String|Array} path                  The path of the property to modify
+     * @param  {Function}     func                  The function to apply to the existing property
+     * @param  {*}            defaultValue          The value to be assigned ifn none exists already
+     * @param  {Boolean}      [modifyDefault=false] Should the default value also be passed to the given function
+     * @return {*}            [description]
+     * @author Seggev Shoresh <shoresh319@gmail.com>
+     */
+    objectPath.modify = function(obj, path, func, defaultValue, modifyDefault){
+      var value = objectPath.get(obj, path, defaultValue);
+      if(modifyDefault || (defaultValue && value != defaultValue)){
+        value = func(value, obj, path);
+      }
+      return objectPath.set(obj, path, value);
+    }
+
     objectPath.has = function (obj, path) {
       if (typeof path === 'number') {
         path = [path];
