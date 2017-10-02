@@ -15,6 +15,15 @@ function getTestObj() {
   };
 }
 
+function getComplexTestObj() {
+  return {
+    "personas": [
+         { "id":"abc", "name":"John" }, 
+         { "id":"def", "name":"Mike" }
+     ]
+ };
+}
+
 describe('get', function() {
   it('should return the value using unicode key', function() {
     var obj = {
@@ -395,9 +404,9 @@ describe('empty', function(){
       this.notOwn = true;
     }
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.test = function(){};
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.arr = [];
 
     var
@@ -417,7 +426,7 @@ describe('empty', function(){
         instance: new Instance()
       };
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     obj['function'] = function(){};
 
     objectPath.empty(obj, ['array','2']);
@@ -728,9 +737,9 @@ describe('bind object', function () {
       this.notOwn = true;
     }
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.test = function(){};
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.arr = [];
 
     var
@@ -748,7 +757,7 @@ describe('bind object', function () {
         instance: new Instance()
       };
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     obj['function'] = function(){};
 
     var model = objectPath(obj);
@@ -943,5 +952,11 @@ describe('Access own properties [optional]', function () {
     objectPath.withInheritedProps.del(obj, 'notOwn');
     //expect(proto).to.be.deep.equal({notOwn: {}});
     //expect(obj).to.be.deep.equal({notOwn: {}});
+  });
+
+  it('should return the object by key-field', function() {
+    var obj = getComplexTestObj();
+    expect(objectPath.get(obj, 'personas.id:def.name')).to.be.equal('Mike');
+    expect(objectPath.get(obj, ['personas', 'id:def', 'name'])).to.be.equal('Mike');
   });
 });
