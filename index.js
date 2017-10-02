@@ -108,7 +108,7 @@
             var v = getShallowProperty(e, idField);
             if (v == idValue)
             {
-              console.log(`Found item where ${idField}=${idValue}`);
+              //console.log(`Found item where ${idField}=${idValue}`);
               return e;
             }
           }
@@ -144,7 +144,7 @@
         }
       }
 
-      return set(obj[currentPath], path.slice(1), value, doNotReplace);
+      return set(currentValue, path.slice(1), value, doNotReplace);
     }
 
     objectPath.has = function (obj, path) {
