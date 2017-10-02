@@ -1,14 +1,14 @@
 {
-  "name": "object-path",
-  "description": "Access deep object properties using a path",
-  "version": "0.11.4",
+  "name": "object-path-key-value",
+  "description": "Access deep object properties using a path, including key:value array-search support",
+  "version": "0.11.6",
   "author": {
-    "name": "Mario Casciaro"
+    "name": "Mario Casciaro, fork by Tilfried uTILLIty Weissenberger"
   },
-  "homepage": "https://github.com/mariocasciaro/object-path",
+  "homepage": "https://github.com/utillity/object-path",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mariocasciaro/object-path.git"
+    "url": "https://github.com/utillity/object-path.git"
   },
   "engines": {
     "node": ">=0.10.0"
