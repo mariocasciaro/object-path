@@ -1,7 +1,7 @@
 {
   "name": "object-path-key-value",
   "description": "Access deep object properties using a path, including key:value array-search support",
-  "version": "0.11.6",
+  "version": "0.11.7",
   "author": {
     "name": "Mario Casciaro, fork by Tilfried uTILLIty Weissenberger"
   },
