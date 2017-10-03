@@ -88,18 +88,17 @@
     }
 
     function getShallowProperty(obj, prop) {
-      if (typeof prop === 'number')
+      if (typeof prop === 'number') {
         return obj[prop];
+      }
+      if (hasShallowProperty(obj, prop)) {
+        return obj[prop];
+      }
 
       var parts = prop.split(':');
       var isArray = Array.isArray(obj);
       //console.log(`prop=${prop} parts.length=${parts.length} isArray=${isArray} parts[0]=${parts[0]}`);
-      if (parts.length == 1) {
-        if (hasShallowProperty(obj, prop)) {
-          return obj[prop];
-        }
-      }
-      if (isArray) {
+      if (parts.length == 2 && isArray) {
         var idField = parts[0];
         var idValue = parts[1];
         for (var i = 0; i < obj.length; i++) {
@@ -142,6 +141,7 @@
         } else {
           obj[currentPath] = {};
         }
+        currentValue = obj[currentPath];
       }
 
       return set(currentValue, path.slice(1), value, doNotReplace);
