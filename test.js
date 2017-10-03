@@ -15,6 +15,15 @@ function getTestObj() {
   };
 }
 
+function getComplexTestObj() {
+  return {
+    "personas": [
+         { "id":"abc", "name":"John" }, 
+         { "id":"def", "name":"Mike" }
+     ]
+ };
+}
+
 describe('get', function() {
   it('should return the value using unicode key', function() {
     var obj = {
@@ -132,6 +141,12 @@ describe('get', function() {
     expect(objectPath.get(extended, 'enabled')).to.be.equal(true);
     expect(objectPath.get(extended, 'one')).to.be.equal(undefined);
   });
+
+  it('should return the object by key-field', function() {
+    var obj = getComplexTestObj();
+    expect(objectPath.get(obj, 'personas.id:def.name')).to.be.equal('Mike');
+    expect(objectPath.get(obj, ['personas', 'id:def', 'name'])).to.be.equal('Mike');
+  });
 });
 
 
@@ -234,6 +249,12 @@ describe('set', function() {
     obj = [];
     objectPath.set(obj, '0', 'foo');
     expect(obj[0]).to.be.equal('foo');
+  });
+
+  it('should set by key-field', function() {
+    var obj = getComplexTestObj();
+    objectPath.set(obj, 'personas.id:def.name', 'Peter');
+    expect(obj.personas[1].name).to.be.equal('Peter');
   });
 });
 
@@ -395,9 +416,9 @@ describe('empty', function(){
       this.notOwn = true;
     }
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.test = function(){};
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.arr = [];
 
     var
@@ -417,7 +438,7 @@ describe('empty', function(){
         instance: new Instance()
       };
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     obj['function'] = function(){};
 
     objectPath.empty(obj, ['array','2']);
@@ -728,9 +749,9 @@ describe('bind object', function () {
       this.notOwn = true;
     }
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.test = function(){};
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     Instance.prototype.arr = [];
 
     var
@@ -748,7 +769,7 @@ describe('bind object', function () {
         instance: new Instance()
       };
 
-    /*istanbul ignore next: not part of code */
+    //istanbul ignore next: not part of code
     obj['function'] = function(){};
 
     var model = objectPath(obj);

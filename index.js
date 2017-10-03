@@ -88,8 +88,30 @@
     }
 
     function getShallowProperty(obj, prop) {
+      if (typeof prop === 'number') {
+        return obj[prop];
+      }
       if (hasShallowProperty(obj, prop)) {
         return obj[prop];
+      }
+
+      var parts = prop.split(':');
+      var isArray = Array.isArray(obj);
+      //console.log(`prop=${prop} parts.length=${parts.length} isArray=${isArray} parts[0]=${parts[0]}`);
+      if (parts.length == 2 && isArray) {
+        var idField = parts[0];
+        var idValue = parts[1];
+        for (var i = 0; i < obj.length; i++) {
+          var e = obj[i];
+          if (hasShallowProperty(e, idField)) {
+            var v = getShallowProperty(e, idField);
+            if (v == idValue)
+            {
+              //console.log(`Found item where ${idField}=${idValue}`);
+              return e;
+            }
+          }
+        }
       }
     }
 
@@ -119,9 +141,10 @@
         } else {
           obj[currentPath] = {};
         }
+        currentValue = obj[currentPath];
       }
 
-      return set(obj[currentPath], path.slice(1), value, doNotReplace);
+      return set(currentValue, path.slice(1), value, doNotReplace);
     }
 
     objectPath.has = function (obj, path) {
@@ -245,7 +268,7 @@
         return nextObj;
       }
 
-      return objectPath.get(obj[currentPath], path.slice(1), defaultValue);
+      return objectPath.get(nextObj, path.slice(1), defaultValue);
     };
 
     objectPath.del = function del(obj, path) {
