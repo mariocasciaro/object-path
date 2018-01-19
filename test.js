@@ -1,6 +1,6 @@
 'use strict';
 var expect = require('chai').expect,
-  objectPath = require('./index.js');
+objectPath = require('./index.js');
 
 
 function getTestObj() {
@@ -161,34 +161,34 @@ describe('set', function() {
   it('should set value under shallow object', function() {
     var obj = getTestObj();
     objectPath.set(obj, 'c', {m: 'o'});
-    expect(obj).to.have.deep.property('c.m', 'o');
+    expect(obj).to.include.nested.property('c.m', 'o');
     obj = getTestObj();
     objectPath.set(obj, ['c'], {m: 'o'});
-    expect(obj).to.have.deep.property('c.m', 'o');
+    expect(obj).to.include.nested.property('c.m', 'o');
   });
 
   it('should set value using number path', function() {
     var obj = getTestObj();
     objectPath.set(obj.b.d, 0, 'o');
-    expect(obj).to.have.deep.property('b.d.0', 'o');
+    expect(obj).to.have.nested.property('b.d.0', 'o');
   });
 
   it('should set value under deep object', function() {
     var obj = getTestObj();
     objectPath.set(obj, 'b.c', 'o');
-    expect(obj).to.have.deep.property('b.c', 'o');
+    expect(obj).to.have.nested.property('b.c', 'o');
     obj = getTestObj();
     objectPath.set(obj, ['b','c'], 'o');
-    expect(obj).to.have.deep.property('b.c', 'o');
+    expect(obj).to.have.nested.property('b.c', 'o');
   });
 
   it('should set value under array', function() {
     var obj = getTestObj();
     objectPath.set(obj, 'b.e.1.g', 'f');
-    expect(obj).to.have.deep.property('b.e.1.g', 'f');
+    expect(obj).to.have.nested.property('b.e.1.g', 'f');
     obj = getTestObj();
     objectPath.set(obj, ['b','e',1,'g'], 'f');
-    expect(obj).to.have.deep.property('b.e.1.g', 'f');
+    expect(obj).to.have.nested.property('b.e.1.g', 'f');
 
     obj = {}
     objectPath.set(obj, 'b.0', 'a');
@@ -199,10 +199,10 @@ describe('set', function() {
   it('should create intermediate objects', function() {
     var obj = getTestObj();
     objectPath.set(obj, 'c.d.e.f', 'l');
-    expect(obj).to.have.deep.property('c.d.e.f', 'l');
+    expect(obj).to.have.nested.property('c.d.e.f', 'l');
     obj = getTestObj();
     objectPath.set(obj, ['c','d','e','f'], 'l');
-    expect(obj).to.have.deep.property('c.d.e.f', 'l');
+    expect(obj).to.have.nested.property('c.d.e.f', 'l');
   });
 
   it('should create intermediate arrays', function() {
@@ -210,21 +210,21 @@ describe('set', function() {
     objectPath.set(obj, 'c.0.1.m', 'l');
     expect(obj.c).to.be.an('array');
     expect(obj.c[0]).to.be.an('array');
-    expect(obj).to.have.deep.property('c.0.1.m', 'l');
+    expect(obj).to.have.nested.property('c.0.1.m', 'l');
     obj = getTestObj();
     objectPath.set(obj, ['c','0', 1,'m'], 'l');
     expect(obj.c).to.be.an('object');
     expect(obj.c[0]).to.be.an('array');
-    expect(obj).to.have.deep.property('c.0.1.m', 'l');
+    expect(obj).to.have.nested.property('c.0.1.m', 'l');
   });
 
   it('should set value under integer-like key', function() {
     var obj = getTestObj();
     objectPath.set(obj, '1a', 'foo');
-    expect(obj).to.have.deep.property('1a', 'foo');
+    expect(obj).to.have.nested.property('1a', 'foo');
     obj = getTestObj();
     objectPath.set(obj, ['1a'], 'foo');
-    expect(obj).to.have.deep.property('1a', 'foo');
+    expect(obj).to.have.nested.property('1a', 'foo');
   });
 
   it('should set value under empty array', function() {
@@ -242,9 +242,9 @@ describe('push', function() {
   it('should push value to existing array using unicode key', function() {
     var obj = getTestObj();
     objectPath.push(obj, 'b.\u1290c', 'l');
-    expect(obj).to.have.deep.property('b.\u1290c.0', 'l');
+    expect(obj).to.have.nested.property('b.\u1290c.0', 'l');
     objectPath.push(obj, ['b','\u1290c'], 'l');
-    expect(obj).to.have.deep.property('b.\u1290c.1', 'l');
+    expect(obj).to.have.nested.property('b.\u1290c.1', 'l');
   });
 
   it('should push value to existing array using dot key', function() {
@@ -256,25 +256,25 @@ describe('push', function() {
   it('should push value to existing array', function() {
     var obj = getTestObj();
     objectPath.push(obj, 'b.c', 'l');
-    expect(obj).to.have.deep.property('b.c.0', 'l');
+    expect(obj).to.have.nested.property('b.c.0', 'l');
     obj = getTestObj();
     objectPath.push(obj, ['b','c'], 'l');
-    expect(obj).to.have.deep.property('b.c.0', 'l');
+    expect(obj).to.have.nested.property('b.c.0', 'l');
   });
 
   it('should push value to new array', function() {
     var obj = getTestObj();
     objectPath.push(obj, 'b.h', 'l');
-    expect(obj).to.have.deep.property('b.h.0', 'l');
+    expect(obj).to.have.nested.property('b.h.0', 'l');
     obj = getTestObj();
     objectPath.push(obj, ['b','h'], 'l');
-    expect(obj).to.have.deep.property('b.h.0', 'l');
+    expect(obj).to.have.nested.property('b.h.0', 'l');
   });
 
   it('should push value to existing array using number path', function() {
     var obj = getTestObj();
     objectPath.push(obj.b.e, 0, 'l');
-    expect(obj).to.have.deep.property('b.e.0.0', 'l');
+    expect(obj).to.have.nested.property('b.e.0.0', 'l');
   });
 
 });
@@ -285,13 +285,13 @@ describe('ensureExists', function() {
     var obj = getTestObj();
     var oldVal = objectPath.ensureExists(obj, 'b.g.1.l', 'test');
     expect(oldVal).to.not.exist;
-    expect(obj).to.have.deep.property('b.g.1.l', 'test');
+    expect(obj).to.have.nested.property('b.g.1.l', 'test');
     oldVal = objectPath.ensureExists(obj, 'b.g.1.l', 'test1');
     expect(oldVal).to.be.equal('test');
-    expect(obj).to.have.deep.property('b.g.1.l', 'test');
+    expect(obj).to.have.nested.property('b.g.1.l', 'test');
     oldVal = objectPath.ensureExists(obj, 'b.\u8210', 'ok');
     expect(oldVal).to.not.exist;
-    expect(obj).to.have.deep.property('b.\u8210', 'ok');
+    expect(obj).to.have.nested.property('b.\u8210', 'ok');
     oldVal = objectPath.ensureExists(obj, ['b','dot.dot'], 'ok');
     expect(oldVal).to.not.exist;
     expect(objectPath.get(obj, ['b','dot.dot'])).to.be.equal('ok');
@@ -497,30 +497,30 @@ describe('del', function(){
     objectPath.set(obj, 'b.\ubeef', 'test');
     objectPath.set(obj, ['b','dot.dot'], 'test');
 
-    expect(obj).to.have.deep.property('b.g.1.0','test');
-    expect(obj).to.have.deep.property('b.g.1.1','test');
-    expect(obj).to.have.deep.property('b.h.az','test');
-    expect(obj).to.have.deep.property('b.\ubeef','test');
+    expect(obj).to.have.nested.property('b.g.1.0','test');
+    expect(obj).to.have.nested.property('b.g.1.1','test');
+    expect(obj).to.have.nested.property('b.h.az','test');
+    expect(obj).to.have.nested.property('b.\ubeef','test');
 
     objectPath.del(obj, 'b.h.az');
-    expect(obj).to.not.have.deep.property('b.h.az');
-    expect(obj).to.have.deep.property('b.h');
+    expect(obj).to.not.have.nested.property('b.h.az');
+    expect(obj).to.have.nested.property('b.h');
 
     objectPath.del(obj, 'b.g.1.1');
-    expect(obj).to.not.have.deep.property('b.g.1.1');
-    expect(obj).to.have.deep.property('b.g.1.0','test');
+    expect(obj).to.not.have.nested.property('b.g.1.1');
+    expect(obj).to.have.nested.property('b.g.1.0','test');
 
     objectPath.del(obj, 'b.\ubeef');
-    expect(obj).to.not.have.deep.property('b.\ubeef');
+    expect(obj).to.not.have.nested.property('b.\ubeef');
 
     objectPath.del(obj, ['b','dot.dot']);
     expect(objectPath.get(obj, ['b','dot.dot'])).to.be.equal(void 0);
 
     objectPath.del(obj, ['b','g','1','0']);
-    expect(obj).to.not.have.deep.property('b.g.1.0');
-    expect(obj).to.have.deep.property('b.g.1');
+    expect(obj).to.not.have.nested.property('b.g.1.0');
+    expect(obj).to.have.nested.property('b.g.1');
 
-    expect(objectPath.del(obj, ['b'])).to.not.have.deep.property('b.g');
+    expect(objectPath.del(obj, ['b'])).to.not.have.nested.property('b.g');
     expect(obj).to.be.deep.equal({'a':'b'});
   });
 
@@ -542,24 +542,24 @@ describe('insert', function(){
     var obj = getTestObj();
 
     objectPath.insert(obj, 'b.c', 'asdf');
-    expect(obj).to.have.deep.property('b.c.0', 'asdf');
-    expect(obj).to.not.have.deep.property('b.c.1');
+    expect(obj).to.have.nested.property('b.c.0', 'asdf');
+    expect(obj).to.not.have.nested.property('b.c.1');
   });
 
   it('should create intermediary array', function(){
     var obj = getTestObj();
 
     objectPath.insert(obj, 'b.c.0', 'asdf');
-    expect(obj).to.have.deep.property('b.c.0.0', 'asdf');
+    expect(obj).to.have.nested.property('b.c.0.0', 'asdf');
   });
 
   it('should insert in another index', function(){
     var obj = getTestObj();
 
     objectPath.insert(obj, 'b.d', 'asdf', 1);
-    expect(obj).to.have.deep.property('b.d.1', 'asdf');
-    expect(obj).to.have.deep.property('b.d.0', 'a');
-    expect(obj).to.have.deep.property('b.d.2', 'b');
+    expect(obj).to.have.nested.property('b.d.1', 'asdf');
+    expect(obj).to.have.nested.property('b.d.0', 'a');
+    expect(obj).to.have.nested.property('b.d.2', 'b');
   });
 
   it('should handle sparse array', function(){
@@ -681,22 +681,22 @@ describe('bind object', function () {
     var obj = getTestObj();
     var model = objectPath(obj);
     model.set('c', {m: 'o'});
-    expect(obj).to.have.deep.property('c.m', 'o');
+    expect(obj).to.have.nested.property('c.m', 'o');
     obj = getTestObj();
     model = objectPath(obj);
     model.set(['c'], {m: 'o'});
-    expect(obj).to.have.deep.property('c.m', 'o');
+    expect(obj).to.have.nested.property('c.m', 'o');
   });
 
   it('should push value to existing array', function() {
     var obj = getTestObj();
     var model = objectPath(obj);
     model.push('b.c', 'l');
-    expect(obj).to.have.deep.property('b.c.0', 'l');
+    expect(obj).to.have.nested.property('b.c.0', 'l');
     obj = getTestObj();
     model = objectPath(obj);
     model.push(['b','c'], 'l');
-    expect(obj).to.have.deep.property('b.c.0', 'l');
+    expect(obj).to.have.nested.property('b.c.0', 'l');
   });
 
   it('should create the path if it does not exists', function() {
@@ -704,10 +704,10 @@ describe('bind object', function () {
     var model = objectPath(obj);
     var oldVal = model.ensureExists('b.g.1.l', 'test');
     expect(oldVal).to.not.exist;
-    expect(obj).to.have.deep.property('b.g.1.l', 'test');
+    expect(obj).to.have.nested.property('b.g.1.l', 'test');
     oldVal = model.ensureExists('b.g.1.l', 'test1');
     expect(oldVal).to.be.equal('test');
-    expect(obj).to.have.deep.property('b.g.1.l', 'test');
+    expect(obj).to.have.nested.property('b.g.1.l', 'test');
   });
 
   it('should return the first non-undefined value', function(){
@@ -792,23 +792,23 @@ describe('bind object', function () {
     model.set('b.g.1.1', 'test');
     model.set('b.h.az', 'test');
 
-    expect(obj).to.have.deep.property('b.g.1.0','test');
-    expect(obj).to.have.deep.property('b.g.1.1','test');
-    expect(obj).to.have.deep.property('b.h.az','test');
+    expect(obj).to.have.nested.property('b.g.1.0','test');
+    expect(obj).to.have.nested.property('b.g.1.1','test');
+    expect(obj).to.have.nested.property('b.h.az','test');
 
     model.del('b.h.az');
-    expect(obj).to.not.have.deep.property('b.h.az');
-    expect(obj).to.have.deep.property('b.h');
+    expect(obj).to.not.have.nested.property('b.h.az');
+    expect(obj).to.have.nested.property('b.h');
 
     model.del('b.g.1.1');
-    expect(obj).to.not.have.deep.property('b.g.1.1');
-    expect(obj).to.have.deep.property('b.g.1.0','test');
+    expect(obj).to.not.have.nested.property('b.g.1.1');
+    expect(obj).to.have.nested.property('b.g.1.0','test');
 
     model.del(['b','g','1','0']);
-    expect(obj).to.not.have.deep.property('b.g.1.0');
-    expect(obj).to.have.deep.property('b.g.1');
+    expect(obj).to.not.have.nested.property('b.g.1.0');
+    expect(obj).to.have.nested.property('b.g.1');
 
-    expect(model.del(['b'])).to.not.have.deep.property('b.g');
+    expect(model.del(['b'])).to.not.have.nested.property('b.g');
     expect(obj).to.be.deep.equal({'a':'b'});
   });
 
@@ -817,8 +817,8 @@ describe('bind object', function () {
     var model = objectPath(obj);
 
     model.insert('b.c', 'asdf');
-    expect(obj).to.have.deep.property('b.c.0', 'asdf');
-    expect(obj).to.not.have.deep.property('b.c.1');
+    expect(obj).to.have.nested.property('b.c.0', 'asdf');
+    expect(obj).to.not.have.nested.property('b.c.1');
   });
 
   it('should test under shallow object', function() {
