@@ -112,7 +112,7 @@
         return currentValue;
       }
 
-      if (currentValue === void 0) {
+      if (!currentValue) {
         //check if we assume an array
         if(typeof path[1] === 'number') {
           obj[currentPath] = [];
