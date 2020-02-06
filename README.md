@@ -11,6 +11,7 @@ Access deep properties using a path
 [![devDependency Status](https://david-dm.org/mariocasciaro/object-path/dev-status.svg)](https://david-dm.org/mariocasciaro/object-path#info=devDependencies)
 ![Downloads](http://img.shields.io/npm/dm/object-path.svg)
 
+Sponsored by [<img src="https://frontendrobot.com/assets/fr-full-logo-green.png" width="200">](https://frontendrobot.com)
 
 ## Changelog
 
