@@ -237,6 +237,34 @@ describe('set', function() {
   });
 });
 
+describe('update', function() {
+  it('should update an existing array of values', function() {
+    var obj = getTestObj();
+    objectPath.update(obj, ['b', 'd'], function(value, object, path) {
+      var newValue = []
+      for (var i = 0; i < value.length; i++) {
+        newValue.push(value[i].charCodeAt(0))
+      }
+      return newValue;
+    })
+    expect(obj.b.d[0]).to.be.equal(97)
+    expect(obj.b.d[1]).to.be.equal(98)
+  });
+
+  it('should update an array of values that doesn\'t exist', function() {
+    var obj = getTestObj();
+    objectPath.update(obj, ['b', 'z'], function(value, object, path) {
+      var newValue = []
+      for (var i = 0; i < value.length; i++) {
+        newValue.push(value[i].charCodeAt(0))
+      }
+      return newValue;
+    }, ['x', 'y', 'z'])
+    expect(obj.b.z[0]).to.be.equal(120)
+    expect(obj.b.z[1]).to.be.equal(121)
+    expect(obj.b.z[2]).to.be.equal(122)
+  });
+});
 
 describe('push', function() {
   it('should push value to existing array using unicode key', function() {
