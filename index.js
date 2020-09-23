@@ -104,6 +104,11 @@
         return set(obj, path.split('.').map(getKey), value, doNotReplace);
       }
       var currentPath = path[0];
+
+      if (currentPath === '__proto__' || currentPath === 'constructor' || currentPath === 'prototype') {
+        return obj;
+      }
+
       var currentValue = getShallowProperty(obj, currentPath);
       if (path.length === 1) {
         if (currentValue === void 0 || !doNotReplace) {
