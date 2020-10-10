@@ -112,6 +112,10 @@
       }
       var currentPath = path[0];
       var currentValue = getShallowProperty(obj, currentPath);
+      if (options.includeInheritedProps && (currentPath === '__proto__' ||
+        (currentPath === 'constructor' && typeof currentValue === 'function'))) {
+        throw new Error('For security reasons, object\'s magic properties cannot be set')
+      }
       if (path.length === 1) {
         if (currentValue === void 0 || !doNotReplace) {
           obj[currentPath] = value;
