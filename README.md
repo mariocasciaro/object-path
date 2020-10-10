@@ -15,6 +15,10 @@ Sponsored by [<img src="https://frontendrobot.com/assets/fr-full-logo-green.png"
 
 ## Changelog
 
+### 0.11.5
+
+* **Security Fix**. Fix a prototype pollution vulnerability in the `set()` function when using the "inherited props" mode (e.g. when a new `object-path` instance is created with the `includeInheritedProps` option set to `true` or when using the `withInheritedProps` default instance. The vulnerability does not exist in the default instance exposed by object path (e.g `objectPath.set()`).
+
 ### 0.11.0
 
 * Introduce ability to specify options and create new instances of `object-path`
