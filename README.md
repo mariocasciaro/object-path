@@ -15,7 +15,7 @@ Access deep properties using a path
 
 ### 0.11.5
 
-* **SECURITY FIX**. Fix a prototype pollution vulnerability in the `set()` function when using the "inherited props" mode (e.g. when a new `object-path` instance is created with the `includeInheritedProps` option set to `true` or when using the `withInheritedProps` default instance. The vulnerability does not exist in the default instance exposed by object path (e.g `objectPath.set()`).
+* **SECURITY FIX**. Fix a prototype pollution vulnerability in the `set()` function when using the "inherited props" mode (e.g. when a new `object-path` instance is created with the `includeInheritedProps` option set to `true` or when using the `withInheritedProps` default instance. The vulnerability does not exist in the default instance exposed by object path (e.g `objectPath.set()`) if using version >= `0.11.0`.
 
 ### 0.11.0
 
