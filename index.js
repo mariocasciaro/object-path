@@ -111,6 +111,9 @@
         return set(obj, path.split('.').map(getKey), value, doNotReplace);
       }
       var currentPath = path[0];
+      if (typeof currentPath !== 'string' && typeof currentPath !== 'number') {
+        currentPath = String(currentPath)
+      }
       var currentValue = getShallowProperty(obj, currentPath);
       if (options.includeInheritedProps && (currentPath === '__proto__' ||
         (currentPath === 'constructor' && typeof currentValue === 'function'))) {

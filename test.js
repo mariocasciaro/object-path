@@ -241,10 +241,16 @@ describe('set', function () {
     objectPath.set({}, '__proto__.injected', 'this is bad')
     expect(Object.prototype.injected).to.be.undefined
 
+    objectPath.set({}, [['__proto__'], 'injected'], 'this is bad')
+    expect(Object.prototype.injected).to.be.undefined
+
     function Clazz() {}
     Clazz.prototype.test = 'original'
 
     objectPath.set(new Clazz(), '__proto__.test', 'this is bad')
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.set(new Clazz(), [['__proto__'], 'test'], 'this is bad')
     expect(Clazz.prototype.test).to.be.equal('original')
 
     objectPath.set(new Clazz(), 'constructor.prototype.test', 'this is bad')
@@ -255,6 +261,11 @@ describe('set', function () {
     expect(function() {objectPath.withInheritedProps.set({}, '__proto__.injected', 'this is bad')})
       .to.throw('For security reasons')
     expect(Object.prototype.injected).to.be.undefined
+
+    expect(function() {
+      objectPath.withInheritedProps.set({}, [['__proto__'], 'injected'], 'this is bad')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
 
     function Clazz() {}
     Clazz.prototype.test = 'original'
@@ -267,8 +278,11 @@ describe('set', function () {
       .to.throw('For security reasons')
     expect(Clazz.prototype.test).to.be.equal('original')
 
-    const obj = {}
-    expect(function() {objectPath.withInheritedProps.set(obj, 'constructor.prototype.injected', 'this is OK')})
+    expect(function() {objectPath.withInheritedProps.set({}, 'constructor.prototype.injected', 'this is OK')})
+      .to.throw('For security reasons')
+    expect(Object.prototype.injected).to.be.undefined
+
+    expect(function() {objectPath.withInheritedProps.set({}, [['constructor'], 'prototype', 'injected'], 'this is bad')})
       .to.throw('For security reasons')
     expect(Object.prototype.injected).to.be.undefined
   })
