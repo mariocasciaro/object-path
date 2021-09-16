@@ -13,6 +13,10 @@ Access deep properties using a path
 
 ## Changelog
 
+### 0.11.8
+
+* **SECURITY FIX**. Fix a prototype pollution vulnerability in the `del()`, `empty()`, `push()`, `insert()` functions when using the "inherited props" mode (e.g. when a new `object-path` instance is created with the `includeInheritedProps` option set to `true` or when using the `withInheritedProps` default instance. To help with preventing this type of vulnerability in the client code, also the `get()` function will now throw an exception if an object's magic properties are accessed. The vulnerability does not exist in the default instance exposed by object path (e.g `objectPath.del()`) if using version >= `0.11.0`.
+
 ### 0.11.6
 
 * **SECURITY FIX**. Fix a circumvention of the security fix released in 0.11.5 when non-string/non-numeric values are used in the path (e.g. `op.withInheritedProps.set({}, [['__proto__'], 'polluted'], true)`)
@@ -175,6 +179,8 @@ objectPath.withInheritedProps.get(obj, 'notOwn.prop');
 //This will set proto.notOwn.prop to 'b'
 objectPath.set(obj, 'notOwn.prop', 'b');
 ```
+
+**NOTE**: For security reasons `object-path` will throw an exception when trying to access an object's magic properties (e.g. `__proto__`, `constructor`) when in "inherited props" mode.
 
 ### Immutability
 

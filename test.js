@@ -133,6 +133,43 @@ describe('get', function () {
     expect(objectPath.get(extended, 'enabled')).to.be.equal(true)
     expect(objectPath.get(extended, 'one')).to.be.equal(undefined)
   })
+
+  it('[security] should not get magic properties in default mode', function () {
+    expect(objectPath.get({}, '__proto__')).to.be.undefined
+    expect(objectPath.get({}, [['__proto__']])).to.be.undefined
+
+    function Clazz() {}
+    Clazz.prototype.test = []
+
+    expect(objectPath.get(new Clazz(), '__proto__')).to.be.undefined
+    expect(objectPath.get(new Clazz(), [['__proto__']])).to.be.undefined
+    expect(objectPath.get(new Clazz(), ['constructor', 'prototype'])).to.be.undefined
+  })
+
+  it('[security] should not get magic properties in inheritedProps mode', function () {
+    expect(function() {
+      objectPath.withInheritedProps.get({}, '__proto__')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.get({}, [['__proto__']])
+    }).to.throw('For security reasons')
+
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    expect(function() {
+      objectPath.withInheritedProps.get(new Clazz(), '__proto__')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.get(new Clazz(), [['__proto__']])
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.get(new Clazz(), ['constructor', 'prototype'])
+    }).to.throw('For security reasons')
+  })
 })
 
 
@@ -244,8 +281,14 @@ describe('set', function () {
     objectPath.set({}, [['__proto__'], 'injected'], 'this is bad')
     expect(Object.prototype.injected).to.be.undefined
 
+    objectPath.set({}, ['__proto__'], {})
+    expect(Object.prototype.toString).to.be.a('function')
+
     function Clazz() {}
     Clazz.prototype.test = 'original'
+
+    objectPath.set({}, ['__proto__'], {test: 'this is bad'})
+    expect(Clazz.prototype.test).to.be.equal('original')
 
     objectPath.set(new Clazz(), '__proto__.test', 'this is bad')
     expect(Clazz.prototype.test).to.be.equal('original')
@@ -258,9 +301,10 @@ describe('set', function () {
   })
 
   it('[security] should throw an exception if trying to set magic properties in inheritedProps mode', function () {
-    expect(function() {objectPath.withInheritedProps.set({}, '__proto__.injected', 'this is bad')})
-      .to.throw('For security reasons')
-    expect(Object.prototype.injected).to.be.undefined
+    expect(function() {
+      objectPath.withInheritedProps.set({}, '__proto__.injected', 'this is bad')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
 
     expect(function() {
       objectPath.withInheritedProps.set({}, [['__proto__'], 'injected'], 'this is bad')
@@ -270,21 +314,25 @@ describe('set', function () {
     function Clazz() {}
     Clazz.prototype.test = 'original'
 
-    expect(function() {objectPath.withInheritedProps.set(new Clazz(), '__proto__.test', 'this is bad')})
-      .to.throw('For security reasons')
-    expect(Clazz.prototype.test).to.be.equal('original')
+    expect(function() {
+      objectPath.withInheritedProps.set(new Clazz(), '__proto__.test', 'this is bad')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
 
-    expect(function() {objectPath.withInheritedProps.set(new Clazz(), 'constructor.prototype.test', 'this is bad')})
-      .to.throw('For security reasons')
-    expect(Clazz.prototype.test).to.be.equal('original')
+    expect(function() {
+      objectPath.withInheritedProps.set(new Clazz(), 'constructor.prototype.test', 'this is bad')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
 
-    expect(function() {objectPath.withInheritedProps.set({}, 'constructor.prototype.injected', 'this is OK')})
-      .to.throw('For security reasons')
-    expect(Object.prototype.injected).to.be.undefined
+    expect(function() {
+      objectPath.withInheritedProps.set({}, 'constructor.prototype.injected', 'this is OK')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
 
-    expect(function() {objectPath.withInheritedProps.set({}, [['constructor'], 'prototype', 'injected'], 'this is bad')})
-      .to.throw('For security reasons')
-    expect(Object.prototype.injected).to.be.undefined
+    expect(function() {
+      objectPath.withInheritedProps.set({}, [['constructor'], 'prototype', 'injected'], 'this is bad')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
   })
 })
 
@@ -328,6 +376,39 @@ describe('push', function () {
     expect(obj).to.have.nested.property('b.e.0.0', 'l')
   })
 
+  it('[security] should not push within prototype properties in default mode', function () {
+    function Clazz() {}
+    Clazz.prototype.test = []
+
+    objectPath.push(new Clazz(), '__proto__.test', 'pushed')
+    expect(Clazz.prototype.test).to.be.deep.equal([])
+
+    objectPath.push(new Clazz(), [['__proto__'], 'test'], 'pushed')
+    expect(Clazz.prototype.test).to.be.deep.equal([])
+
+    objectPath.push(new Clazz(), 'constructor.prototype.test', 'pushed')
+    expect(Clazz.prototype.test).to.be.deep.equal([])
+  })
+
+  it('[security] should not push within prototype properties in inheritedProps mode', function () {
+    function Clazz() {}
+    Clazz.prototype.test = []
+
+    expect(function() {
+      objectPath.withInheritedProps.push(new Clazz(), '__proto__.test', 'pushed')
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.push(new Clazz(), [['__proto__'], 'test'], 'pushed')
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.push(new Clazz(), 'constructor.prototype.test', 'pushed')
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
+  })
 })
 
 
@@ -360,6 +441,67 @@ describe('ensureExists', function () {
     expect(any).to.be.an('object')
     expect(any[1]).to.be.an('object')
     expect(any[1][1]).to.be.an('object')
+  })
+
+  it('[security] should not set magic properties in default mode', function () {
+    objectPath.ensureExists({}, '__proto__.injected', 'this is bad')
+    expect(Object.prototype.injected).to.be.undefined
+
+    objectPath.ensureExists({}, [['__proto__'], 'injected'], 'this is bad')
+    expect(Object.prototype.injected).to.be.undefined
+
+    objectPath.ensureExists({}, ['__proto__'], {})
+    expect(Object.prototype.toString).to.be.a('function')
+
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    objectPath.ensureExists({}, ['__proto__'], {test: 'this is bad'})
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.ensureExists(new Clazz(), '__proto__.test', 'this is bad')
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.ensureExists(new Clazz(), [['__proto__'], 'test'], 'this is bad')
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.ensureExists(new Clazz(), 'constructor.prototype.test', 'this is bad')
+    expect(Clazz.prototype.test).to.be.equal('original')
+  })
+
+  it('[security] should throw an exception if trying to set magic properties in inheritedProps mode', function () {
+    expect(function() {objectPath.withInheritedProps.ensureExists({}, '__proto__.injected', 'this is bad')})
+      .to.throw('For security reasons')
+    expect(Object.prototype.injected).to.be.undefined
+
+    expect(function() {
+      objectPath.withInheritedProps.ensureExists({}, [['__proto__'], 'injected'], 'this is bad')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
+
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    expect(function() {
+      objectPath.withInheritedProps.ensureExists(new Clazz(), '__proto__.test', 'this is bad')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+
+
+    expect(function() {
+      objectPath.withInheritedProps.ensureExists(new Clazz(), 'constructor.prototype.test', 'this is bad')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.ensureExists({}, 'constructor.prototype.injected', 'this is OK')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.ensureExists({}, [['constructor'], 'prototype', 'injected'], 'this is bad')
+      expect(Object.prototype.injected).to.be.undefined
+    }).to.throw('For security reasons')
   })
 })
 
@@ -512,6 +654,40 @@ describe('empty', function () {
     expect(obj.instance.arr).to.be.an('array')
     expect(obj['function']).to.equal(null)
   })
+
+  it('[security] should not empty prototype properties in default mode', function () {
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    objectPath.empty(new Clazz(), '__proto__')
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.empty(new Clazz(), [['__proto__']])
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.empty(new Clazz(), 'constructor.prototype')
+    expect(Clazz.prototype.test).to.be.equal('original')
+  })
+
+  it('[security] should throw an exception if trying to delete prototype properties in inheritedProps mode', function () {
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    expect(function() {
+      objectPath.withInheritedProps.empty(new Clazz(), '__proto__')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.empty(new Clazz(), 'constructor.prototype')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.empty({}, [['constructor'], 'prototype'])
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+  })
 })
 
 describe('del', function () {
@@ -588,6 +764,56 @@ describe('del', function () {
     expect(obj.b.d).to.have.length(0)
     expect(obj.b.d).to.be.deep.equal([])
   })
+
+  it('[security] should not delete prototype properties in default mode', function () {
+    objectPath.del({}, '__proto__.valueOf')
+    expect(Object.prototype.valueOf).to.be.a('function')
+
+    objectPath.del({}, [['__proto__'], 'valueOf'])
+    expect(Object.prototype.valueOf).to.be.a('function')
+
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    objectPath.del(new Clazz(), '__proto__.test')
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.del(new Clazz(), [['__proto__'], 'test'])
+    expect(Clazz.prototype.test).to.be.equal('original')
+
+    objectPath.del(new Clazz(), 'constructor.prototype.test')
+    expect(Clazz.prototype.test).to.be.equal('original')
+  })
+
+  it('[security] should throw an exception if trying to delete prototype properties in inheritedProps mode', function () {
+    expect(function() {
+      objectPath.withInheritedProps.del({}, '__proto__.valueOf')
+      expect(Object.prototype.valueOf).to.be.a('function')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.del({}, [['__proto__'], 'valueOf'])
+      expect(Object.prototype.valueOf).to.be.a('function')
+    }).to.throw('For security reasons')
+
+    function Clazz() {}
+    Clazz.prototype.test = 'original'
+
+    expect(function() {
+      objectPath.withInheritedProps.del(new Clazz(), '__proto__.test')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.del(new Clazz(), 'constructor.prototype.test', 'this is bad')
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.del({}, [['constructor'], 'prototype', 'test'])
+      expect(Clazz.prototype.test).to.be.equal('original')
+    }).to.throw('For security reasons')
+  })
 })
 
 describe('insert', function () {
@@ -629,6 +855,45 @@ describe('insert', function () {
       ,
       'asdf'
     ])
+  })
+
+  it('[security] should not insert within prototype properties in default mode', function () {
+    function Clazz() {}
+    Clazz.prototype.test = []
+
+    objectPath.insert(new Clazz(), '__proto__.test', 'inserted', 0)
+    expect(Clazz.prototype.test).to.be.deep.equal([])
+
+    objectPath.insert(new Clazz(), [['__proto__'], 'test'], 'inserted', 0)
+    expect(Clazz.prototype.test).to.be.deep.equal([])
+
+    objectPath.insert(new Clazz(), 'constructor.prototype.test', 'inserted', 0)
+    expect(Clazz.prototype.test).to.be.deep.equal([])
+  })
+
+  it('[security] should not insert within prototype properties in inheritedProps mode', function () {
+    function Clazz() {}
+    Clazz.prototype.test = []
+
+    expect(function() {
+      objectPath.withInheritedProps.insert(new Clazz(), '__proto__.test', 'inserted', 0)
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.insert(new Clazz(), [['__proto__'], 'test'], 'inserted', 0)
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.insert(new Clazz(), 'constructor.prototype.test', 'inserted', 0)
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
+
+    expect(function() {
+      objectPath.withInheritedProps.insert(new Clazz().constructor, 'prototype.test', 'inserted', 0)
+      expect(Clazz.prototype.test).to.be.deep.equal([])
+    }).to.throw('For security reasons')
   })
 })
 
